@@ -149,14 +149,14 @@ body {
   font-family: Cinzel, Georgia, serif;
   background: transparent url("/images/header_button.png") center / 100% 100% no-repeat;
   border: none;
-  min-width: 7.5rem;
-  min-height: 2.5rem;
-  padding: 0.45rem 1.35rem;
-  font-size: 0.62rem;
+  min-width: 9.5rem;
+  min-height: 3.25rem;
+  padding: 0.6rem 1.75rem;
+  font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #f1f5f9;
+  color: #ffffff;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
   transition: filter 0.2s, transform 0.2s;
   display: inline-flex;
@@ -180,29 +180,12 @@ body {
   cursor: not-allowed;
 }
 
-.header-btn-danger {
-  color: #fecaca;
-}
-
-.header-btn-phase-player {
-  color: #bae6fd;
-}
-
-.header-btn-phase-enemy {
-  color: #fecdd3;
-}
-
-.header-btn-phase-combat {
-  color: #fde68a;
-  animation: amber-pulse 1.5s ease-in-out infinite;
-}
-
 .header-btn-gold {
   color: #fcd34d;
 }
 
 .header-btn-gold-flash {
-  color: #bbf7d0;
+  color: #fde68a;
   transform: scale(1.06);
 }
 

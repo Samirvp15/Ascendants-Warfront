@@ -5,7 +5,6 @@ type GameHeaderProps = {
   mainDeckRemaining: number;
   displayGold: number;
   flashGold: number | null;
-  phase: "playerTurn" | "enemyTurn" | "combat";
   onNewMatch: () => void;
   onReset: () => void;
 };
@@ -15,58 +14,40 @@ export function GameHeader({
   mainDeckRemaining,
   displayGold,
   flashGold,
-  phase,
   onNewMatch,
   onReset,
 }: GameHeaderProps) {
-  const phaseLabel =
-    phase === "playerTurn" ? "Your Turn" : phase === "enemyTurn" ? "Enemy Turn" : "Combat";
-
-  const phaseVariant =
-    phase === "playerTurn"
-      ? "phase-player"
-      : phase === "enemyTurn"
-        ? "phase-enemy"
-        : "phase-combat";
-
-  const controls = (
-    <>
-      <HeaderBadge
-        variant="gold"
-        className={flashGold !== null ? "header-btn-gold-flash transition-transform duration-500" : ""}
-      >
-        <span className={flashGold !== null ? "animate-bounce" : ""}>💰</span>
-        <span className="ml-1 tabular-nums">{displayGold}</span>
-        {flashGold !== null && (
-          <span className="ml-1 animate-pulse text-emerald-200">+{flashGold}</span>
-        )}
-      </HeaderBadge>
-      <HeaderBadge variant={phaseVariant}>{phaseLabel}</HeaderBadge>
-      <HeaderButton onClick={onNewMatch}>New Match</HeaderButton>
-      <HeaderButton variant="danger" onClick={onReset}>
-        Reset All
-      </HeaderButton>
-    </>
-  );
-
   return (
-    <header className="relative mb-5 px-1 pt-1 lg:min-h-[5.5rem]">
-      <div className="pointer-events-none flex flex-col items-center pt-1">
+    <header className="relative z-30 mb-4 grid w-full grid-cols-1 items-center gap-4 md:grid-cols-[1fr_auto_1fr] md:gap-0">
+      {/* Logo section — centered (true center on desktop via middle column) */}
+      <div className="flex flex-col items-center md:col-start-2 md:row-start-1">
         <img
           src="/images/game_logo.png"
           alt="Ascendants Warfront"
-          className="h-14 w-auto max-w-[min(100%,320px)] object-contain drop-shadow-[0_4px_24px_rgba(0,0,0,0.65)] md:h-16"
+          className="h-36 w-auto max-w-[min(96vw,780px)] object-contain drop-shadow-[0_10px_48px_rgba(0,0,0,0.85)] sm:h-36 md:h-40 lg:h-44 xl:h-46"
         />
         <p
-          className="mt-2 text-[11px] text-slate-400/90 drop-shadow-md"
+          className="mt-2 px-1 text-center text-xs text-slate-400/95 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] sm:text-sm"
           style={{ fontFamily: "Cinzel, Georgia, serif" }}
         >
           Round {round} · Main deck: {mainDeckRemaining} cards left
         </p>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center justify-center gap-2 lg:absolute lg:right-0 lg:top-0 lg:mt-0 lg:justify-end">
-        {controls}
+      {/* Header buttons — right column, bottom-aligned */}
+      <div className="flex flex-wrap items-center justify-center gap-2.5 md:col-start-3 md:row-start-1  md:pb-1">
+        <HeaderBadge
+          variant="gold"
+          className={flashGold !== null ? "header-btn-gold-flash transition-transform duration-500" : ""}
+        >
+          <span className={flashGold !== null ? "animate-bounce" : ""}>💰</span>
+          <span className="ml-1 tabular-nums">{displayGold}</span>
+          {flashGold !== null && (
+            <span className="ml-1 animate-pulse text-amber-200">+{flashGold}</span>
+          )}
+        </HeaderBadge>
+        <HeaderButton onClick={onNewMatch}>New Match</HeaderButton>
+        <HeaderButton onClick={onReset}>Reset All</HeaderButton>
       </div>
     </header>
   );

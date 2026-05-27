@@ -748,13 +748,12 @@ export default function App() {
         backgroundAttachment: "fixed",
       }}
     >
-      <div className="mx-auto max-w-[1400px] px-3 py-4">
+      <div className="mx-auto max-w-[1400px] px-3">
         <GameHeader
           round={round}
           mainDeckRemaining={mainDeck.length + shopEntries.length}
           displayGold={displayGold}
           flashGold={flashGold}
-          phase={phase}
           onNewMatch={initMatch}
           onReset={() => resetProgress()}
         />
