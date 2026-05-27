@@ -1,4 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { GameHeader } from "./components/ui/GameHeader";
+import { HandCard } from "./components/ui/HandCard";
+import { HowItWorksPanel } from "./components/ui/HowItWorksPanel";
+import { MainDeckShop } from "./components/ui/MainDeckShop";
+import { ResourceBar } from "./components/ui/ResourceBar";
+import { StrikeButton } from "./components/ui/StrikeButton";
+import { EmptySlot, UnitCard } from "./components/ui/UnitCard";
+import { cn } from "./utils/cn";
 
 // ---------- TYPES ----------
 type CardType = "unit" | "spell";
@@ -731,353 +739,333 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen w-full text-slate-100" style={{
-      backgroundImage: `url('/images/bg_battlefield.png')`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundAttachment: 'fixed'
-    }}>
-      <div className="mx-auto max-w-7xl px-4 py-5">
-        <header
-          className="relative mb-4 flex flex-wrap items-center justify-between gap-3 overflow-hidden rounded-2xl border border-slate-700/50 px-4 py-3"
-          style={{
-            backgroundImage: `linear-gradient(90deg, rgba(15,23,42,0.92), rgba(30,41,59,0.84)), url('/images/card_soldier.jpg')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center 40%'
-          }}
-        >
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-rose-500 text-xl shadow-lg shadow-amber-500/20">⚔️</div>
-            <div>
-              <h1 className="text-lg font-bold leading-tight">Lane Clash</h1>
-              <p className="text-xs text-slate-400">Round {round} · Main deck: {mainDeck.length + shopEntries.length} cards left</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-bold transition-all duration-500 ${flashGold !== null ? "border-emerald-400/60 bg-emerald-500/25 text-emerald-200 scale-110" : "border-amber-400/40 bg-amber-500/15 text-amber-300"}`}>
-              <span className={flashGold !== null ? "animate-bounce" : ""}>💰</span>
-              <span className="tabular-nums">{displayGold}</span>
-              {flashGold !== null && <span className="text-emerald-200 animate-pulse">+{flashGold}</span>}
-            </span>
-            <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold transition-all duration-500 ${
-              phase === "playerTurn" ? "bg-sky-500/15 text-sky-300 border-sky-500/40"
-              : phase === "enemyTurn" ? "bg-rose-500/15 text-rose-300 border-rose-500/40"
-              : "bg-amber-500/15 text-amber-300 border-amber-500/40 animate-pulse"
-            }`}>
-              {phase === "playerTurn" ? "Your Turn" : phase === "enemyTurn" ? "Enemy Turn..." : "Combat"}
-            </span>
-            <button onClick={initMatch} className="rounded-lg border border-slate-700 bg-slate-800/70 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-700">New Match</button>
-            <button onClick={() => resetProgress()} className="rounded-lg border border-rose-700/40 bg-rose-900/30 px-3 py-1.5 text-xs font-medium text-rose-200 hover:bg-rose-900/50">Reset All</button>
-          </div>
-        </header>
+    <div
+      className="min-h-screen w-full"
+      style={{
+        backgroundImage: `url('/images/bg_battlefield.png')`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }}
+    >
+      <div className="mx-auto max-w-[1400px] px-3 py-4">
+        <GameHeader
+          round={round}
+          mainDeckRemaining={mainDeck.length + shopEntries.length}
+          displayGold={displayGold}
+          flashGold={flashGold}
+          phase={phase}
+          onNewMatch={initMatch}
+          onReset={() => resetProgress()}
+        />
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_340px]">
-          {/* BATTLE */}
-          <div className="flex flex-col">
-            {/* Enemy strip — compact */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[220px_1fr_260px]">
+          {/* LEFT — How It Works (desktop) */}
+          <HowItWorksPanel
+            className="order-3 hidden lg:order-1 lg:block"
+            maxDeck={MAX_DECK}
+            goldWin={GOLD.WIN_ROUND + GOLD.INCOME_PER_ROUND}
+            goldTie={GOLD.TIE_ROUND + GOLD.INCOME_PER_ROUND}
+            goldLose={GOLD.LOSE_ROUND + GOLD.INCOME_PER_ROUND}
+            freeRescue={GOLD.FREE_RESCUE}
+          />
+
+          {/* CENTER — Battlefield */}
+          <div className="order-1 flex flex-col gap-3 lg:order-2">
+            {/* Enemy strip */}
             <div
-              className={`relative flex items-center justify-between gap-2 overflow-hidden rounded-lg border px-2 py-1.5 transition-all duration-700 border-rose-500/30 ${currentTurn === "enemy" ? "ring-1 ring-rose-400/40" : ""}`}
+              className={cn(
+                "stone-panel overflow-hidden px-3 py-2.5 transition-all duration-700",
+                currentTurn === "enemy" && "ring-1 ring-rose-400/40"
+              )}
               style={{
                 backgroundImage: `linear-gradient(90deg, rgba(76,5,25,0.92), rgba(15,23,42,0.86)), url('/images/card_raider.jpg')`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center 38%'
+                backgroundSize: "cover",
+                backgroundPosition: "center 38%",
               }}
             >
-              <div className="flex items-center gap-2">
-                <span className="text-lg">👹</span>
-                <span className="text-xs font-semibold">Enemy</span>
-                <span className="text-[10px] text-slate-500">· {enemyDeck.length} cards</span>
+              <div className="mb-2 flex items-center gap-2">
+                <span className="text-xl">👹</span>
+                <span className="font-display text-sm font-bold text-rose-100">Enemy</span>
+                <span className="text-[10px] text-slate-400">· {enemyDeck.length} cards</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[10px] font-bold tabular-nums transition-all duration-700 ${flashMana === "enemy" ? "border-indigo-400/50 bg-indigo-500/25 text-indigo-200 scale-110" : "border-indigo-500/30 bg-indigo-500/10 text-indigo-300"}`}>◆ {enemyMana}/{enemyMaxMana}</span>
-                <span className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[10px] font-bold tabular-nums transition-all duration-700 ${flashNexus === "enemy" ? "border-rose-400/50 bg-rose-500/25 text-rose-200 scale-110" : "border-amber-500/30 bg-amber-500/10 text-amber-300"}`}>♥ {displayEnemyNexus}</span>
+              <div className="space-y-1.5">
+                <ResourceBar
+                  variant="mana"
+                  current={enemyMana}
+                  max={enemyMaxMana}
+                  flash={flashMana === "enemy"}
+                  compact
+                />
+                <ResourceBar
+                  variant="nexus"
+                  current={displayEnemyNexus}
+                  max={STARTING_NEXUS}
+                  flash={flashNexus === "enemy"}
+                  compact
+                />
               </div>
             </div>
 
             {/* Lanes */}
-            <div className="my-2">
-              <div className="grid grid-cols-3 gap-3">
-                {LANES.map(lane => {
-                  const e = enemyBoard[lane], p = playerBoard[lane];
-                  const canTarget = selectedCard !== null && phase === "playerTurn" && !busy;
-                  const validTarget = canTarget && ((selectedCard?.type === "unit" && p === null) || selectedCard?.type === "spell");
-                  const isMoveSource = p && movingUnitId === p.id;
-                  const isMoveTarget = movingUnitId !== null && !isMoveSource && phase === "playerTurn" && !busy;
-                  const pDmg = combatData?.pDmg[lane] ?? null, eDmg = combatData?.eDmg[lane] ?? null;
-                  const showDmg = combatStep === "clash" || combatStep === "deaths";
+            <div className="grid grid-cols-3 gap-2 md:gap-3">
+              {LANES.map((lane) => {
+                const e = enemyBoard[lane],
+                  p = playerBoard[lane];
+                const canTarget = selectedCard !== null && phase === "playerTurn" && !busy;
+                const validTarget =
+                  canTarget &&
+                  ((selectedCard?.type === "unit" && p === null) || selectedCard?.type === "spell");
+                const isMoveSource = p && movingUnitId === p.id;
+                const isMoveTarget = movingUnitId !== null && !isMoveSource && phase === "playerTurn" && !busy;
+                const pDmg = combatData?.pDmg[lane] ?? null,
+                  eDmg = combatData?.eDmg[lane] ?? null;
+                const showDmg = combatStep === "clash" || combatStep === "deaths";
 
-                  const handleLaneClick = () => {
-                    if (validTarget && selectedCard) {
-                      playCard(selectedCard, lane);
-                    } else if (isMoveTarget) {
-                      moveUnitToLane(lane);
-                    }
-                  };
+                const handleLaneClick = () => {
+                  if (validTarget && selectedCard) {
+                    playCard(selectedCard, lane);
+                  } else if (isMoveTarget) {
+                    moveUnitToLane(lane);
+                  }
+                };
 
-                  return (
-                    <div
-                      key={lane}
-                      onClick={handleLaneClick}
-                      className={`relative flex flex-col gap-2 overflow-hidden rounded-2xl border-2 p-2 transition-all duration-500 ${validTarget || isMoveTarget ? "cursor-pointer border-amber-400/70 hover:border-amber-300" : "border-slate-700/60"}`}
-                      style={{
-                        backgroundImage: `linear-gradient(180deg, rgba(15,23,42,0.78), rgba(2,6,23,0.92)), url('/images/card_guardian.jpg')`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center'
-                      }}
-                    >
-                      <div className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">Lane {lane + 1}</div>
-                      <div className="flex min-h-[170px] items-center justify-center">
-                        {e ? (
-                          <div className={`relative flex h-[164px] w-full flex-col justify-between overflow-hidden rounded-xl border-2 p-2.5 transition-all duration-700 border-rose-400/70 bg-gradient-to-b from-rose-800/80 to-rose-950/80 ${showDmg && eDmg !== null ? "ring-2 ring-rose-400/60" : ""} ${combatStep === "deaths" && e.hp <= 0 ? "opacity-30 scale-95 blur-[1px]" : ""}`}>
-                            <div className="absolute inset-0 z-0">
-                              <img src={`/images/card_${e.cardId}.jpg`} alt={e.name} className="h-full w-full object-cover opacity-70" onError={(ev) => { (ev.target as HTMLImageElement).style.display = 'none'; }} />
-                              <div className="absolute inset-0 bg-gradient-to-t from-rose-950/90 via-rose-900/50 to-transparent" />
-                            </div>
-                            <div className="relative z-10">
-                              <div className="text-sm font-extrabold text-white drop-shadow-lg tracking-wide">{e.name}</div>
-                            </div>
-                            <div className="relative z-10 mt-auto flex items-center justify-between">
-                              <span className="rounded-lg bg-amber-500 px-3 py-1 text-xs font-extrabold text-slate-900 shadow-md">⚔ {e.atk}</span>
-                              <span className="rounded-lg bg-emerald-500 px-3 py-1 text-xs font-extrabold text-slate-900 shadow-md">♥ {e.hp}</span>
-                            </div>
-                            {showDmg && eDmg !== null && <div className="pointer-events-none absolute inset-0 flex items-center justify-center"><span className="rounded-full bg-rose-600/90 px-2.5 py-1 text-sm font-bold text-white shadow-lg animate-bounce">-{eDmg}</span></div>}
-                          </div>
-                        ) : (
-                          <div className={`flex h-20 w-full items-center justify-center rounded-lg border border-dashed text-[11px] ${validTarget && selectedCard?.type === "spell" ? "border-amber-400/70 bg-amber-400/5 text-amber-300" : isMoveTarget ? "border-amber-400/70 bg-amber-400/5 text-amber-300" : "border-slate-700/50 text-slate-600"}`}>
-                            {validTarget && selectedCard?.type === "spell" ? "Cast here" : isMoveTarget ? "Move here" : "—"}
-                          </div>
-                        )}
-                      </div>
-                      <div className="relative flex items-center">
-                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-400/30 to-transparent" />
-                        {p && e && <span className="absolute inset-0 flex items-center justify-center bg-[#0a0e1f] px-1.5 text-xs font-bold text-amber-400">⚔</span>}
-                      </div>
-                       <div className="flex min-h-[170px] items-center justify-center">
-                         {p ? (
-                           <div
-                             onClick={(ev) => { ev.stopPropagation(); selectUnitForMove(p.id); }}
-                             className={`relative flex h-[164px] w-full flex-col justify-between overflow-hidden rounded-xl border-2 p-2.5 transition-all duration-700 border-sky-400/70 bg-gradient-to-b from-sky-800/80 to-sky-950/80 cursor-pointer ${isMoveSource ? "ring-2 ring-amber-400 scale-105 shadow-lg shadow-amber-400/30" : ""} ${showDmg && pDmg !== null ? "ring-2 ring-rose-400/60" : ""} ${combatStep === "deaths" && p.hp <= 0 ? "opacity-30 scale-95 blur-[1px]" : ""}`}
-                           >
-                            <div className="absolute inset-0 z-0">
-                              <img src={`/images/card_${p.cardId}.jpg`} alt={p.name} className="h-full w-full object-cover opacity-70" onError={(ev) => { (ev.target as HTMLImageElement).style.display = 'none'; }} />
-                              <div className="absolute inset-0 bg-gradient-to-t from-sky-950/90 via-sky-900/50 to-transparent" />
-                            </div>
-                            <div className="relative z-10">
-                              <div className="text-sm font-extrabold text-white drop-shadow-lg tracking-wide">{p.name}</div>
-                            </div>
-                            <div className="relative z-10 mt-auto flex items-center justify-between">
-                              <span className="rounded-lg bg-amber-500 px-3 py-1 text-xs font-extrabold text-slate-900 shadow-md">⚔ {p.atk}</span>
-                              <span className="rounded-lg bg-emerald-500 px-3 py-1 text-xs font-extrabold text-slate-900 shadow-md">♥ {p.hp}</span>
-                            </div>
-                            {isMoveSource && (
-                              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                                <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-black text-slate-900 shadow-lg animate-pulse">MOVING</span>
-                              </div>
-                            )}
-                            {showDmg && pDmg !== null && !isMoveSource && (
-                              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                                <span className="rounded-full bg-rose-600/90 px-2.5 py-1 text-sm font-bold text-white shadow-lg animate-bounce">-{pDmg}</span>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className={`flex h-20 w-full items-center justify-center rounded-lg border border-dashed text-[11px] ${validTarget && selectedCard?.type === "unit" ? "border-amber-400/70 bg-amber-400/5 text-amber-300" : isMoveTarget ? "border-amber-400/70 bg-amber-400/5 text-amber-300" : "border-slate-700/50 text-slate-600"}`}>
-                            {validTarget && selectedCard?.type === "unit" ? "Deploy here" : isMoveTarget ? "Move here" : "—"}
-                          </div>
-                        )}
-                      </div>
+                return (
+                  <div
+                    key={lane}
+                    onClick={handleLaneClick}
+                    className={cn(
+                      "lane-frame relative flex min-h-[380px] flex-col gap-2 p-2 transition-all duration-500 md:min-h-[420px]",
+                      (validTarget || isMoveTarget) && "lane-frame-target cursor-pointer"
+                    )}
+                    style={{
+                      backgroundImage: `linear-gradient(180deg, rgba(15,23,42,0.78), rgba(2,6,23,0.92)), url('/images/bg_battlefield.png')`,
+                      backgroundSize: "cover",
+                      backgroundPosition: `center ${30 + lane * 15}%`,
+                    }}
+                  >
+                    <div className="text-center font-display text-[10px] font-bold uppercase tracking-[0.25em] text-amber-500/70">
+                      Lane {lane + 1}
                     </div>
-                  );
-                })}
-              </div>
+
+                    <div className="flex flex-1 flex-col items-center justify-center">
+                      {e ? (
+                        <UnitCard
+                          cardId={e.cardId}
+                          name={e.name}
+                          atk={e.atk}
+                          hp={e.hp}
+                          side="enemy"
+                          showDmg={showDmg}
+                          dmg={eDmg}
+                          dying={combatStep === "deaths" && e.hp <= 0}
+                        />
+                      ) : (
+                        <EmptySlot
+                          label={
+                            validTarget && selectedCard?.type === "spell"
+                              ? "Cast here"
+                              : isMoveTarget
+                                ? "Move here"
+                                : "—"
+                          }
+                          active={Boolean(
+                            (validTarget && selectedCard?.type === "spell") || isMoveTarget
+                          )}
+                        />
+                      )}
+                    </div>
+
+                    <div className="relative flex items-center py-1">
+                      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
+                      {p && e && (
+                        <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-amber-400">
+                          ⚔
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-1 flex-col items-center justify-center">
+                      {p ? (
+                        <UnitCard
+                          cardId={p.cardId}
+                          name={p.name}
+                          atk={p.atk}
+                          hp={p.hp}
+                          side="player"
+                          showDmg={showDmg}
+                          dmg={pDmg}
+                          dying={combatStep === "deaths" && p.hp <= 0}
+                          selected={Boolean(isMoveSource)}
+                          moving={Boolean(isMoveSource)}
+                          onClick={(ev) => {
+                            ev.stopPropagation();
+                            selectUnitForMove(p.id);
+                          }}
+                        />
+                      ) : (
+                        <EmptySlot
+                          label={
+                            validTarget && selectedCard?.type === "unit"
+                              ? "Deploy here"
+                              : isMoveTarget
+                                ? "Move here"
+                                : "—"
+                          }
+                          active={Boolean(
+                            (validTarget && selectedCard?.type === "unit") || isMoveTarget
+                          )}
+                        />
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
-            {/* Integrated Command Console: Player Stats + Hand */}
+            {/* Player strip */}
             <div
-              className={`relative mt-2 flex flex-col gap-2 overflow-hidden rounded-xl border-2 p-2 transition-all duration-700 ${currentTurn === "player" ? "border-sky-500/50 ring-1 ring-sky-400/30" : "border-slate-700/60"}`}
+              className={cn(
+                "stone-panel flex flex-col gap-3 overflow-hidden p-3 transition-all duration-700",
+                currentTurn === "player" && "ring-1 ring-sky-400/35"
+              )}
               style={{
                 backgroundImage: `linear-gradient(180deg, rgba(8,47,73,0.88), rgba(15,23,42,0.94)), url('/images/card_knight.jpg')`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center 42%'
+                backgroundSize: "cover",
+                backgroundPosition: "center 42%",
               }}
             >
-              {/* Top stats header — compact single row */}
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">🛡️</span>
-                  <span className="text-xs font-bold text-white">You</span>
-                  <span className={`text-[10px] ${deckCards.length <= 2 ? "text-amber-400 font-semibold" : "text-slate-500"}`}>
+                  <span className="text-xl">🛡️</span>
+                  <span className="font-display text-sm font-bold text-sky-100">You</span>
+                  <span
+                    className={cn(
+                      "text-[10px]",
+                      deckCards.length <= 2 ? "font-semibold text-amber-400" : "text-slate-500"
+                    )}
+                  >
                     · {deckCards.length === 0 ? "⚠ empty" : `${deckCards.length} cards`}
                   </span>
-                  {selectedCard && <span className="rounded-full bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 text-[10px] font-bold text-amber-300 animate-pulse">{selectedCard.name} → lane</span>}
-                  {movingUnitId && !selectedCard && <span className="rounded-full bg-sky-500/10 border border-sky-500/30 px-2 py-0.5 text-[10px] font-bold text-sky-300 animate-pulse">Moving → lane</span>}
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[10px] font-bold tabular-nums transition-all duration-700 ${flashMana === "player" ? "border-indigo-400/60 bg-indigo-500/25 text-indigo-100 scale-110" : "border-indigo-500/30 bg-indigo-950/40 text-indigo-300"}`}>◆ {playerMana}/{playerMaxMana}</span>
-                  <span className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[10px] font-bold tabular-nums transition-all duration-700 ${flashNexus === "player" ? "border-rose-400/60 bg-rose-500/25 text-rose-100 scale-110" : "border-amber-500/30 bg-amber-950/40 text-amber-300"}`}>♥ {displayPlayerNexus}</span>
+                  {selectedCard && (
+                    <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-300 animate-pulse">
+                      {selectedCard.name} → lane
+                    </span>
+                  )}
+                  {movingUnitId && !selectedCard && (
+                    <span className="rounded-full border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-[10px] font-bold text-sky-300 animate-pulse">
+                      Moving → lane
+                    </span>
+                  )}
                 </div>
               </div>
-              <div className="flex items-end gap-2">
-                <div className="flex flex-1 flex-wrap gap-1.5 min-h-[100px]">
+
+              <div className="space-y-1.5">
+                <ResourceBar
+                  variant="mana"
+                  current={playerMana}
+                  max={playerMaxMana}
+                  flash={flashMana === "player"}
+                />
+                <ResourceBar
+                  variant="nexus"
+                  current={displayPlayerNexus}
+                  max={STARTING_NEXUS}
+                  flash={flashNexus === "player"}
+                />
+              </div>
+
+              <div className="flex items-end gap-3">
+                <div className="flex min-h-[112px] flex-1 gap-2 overflow-x-auto pb-1">
                   {deckCards.length === 0 && (
-                    <div className="w-full rounded border border-rose-500/40 bg-rose-500/10 px-2 py-1 text-center text-[10px] text-rose-300">
-                      ⚠️ Deck empty! Buy cards →
+                    <div className="flex w-full items-center justify-center rounded border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-center text-[10px] text-rose-300">
+                      ⚠️ Deck empty! Buy cards from the Main Deck →
                     </div>
                   )}
-                  {deckCards.map(c => {
+                  {deckCards.map((c) => {
                     const autoCastable = isAutoCast(c);
                     const isHealNexus = c.effect === "heal_nexus";
-                    const isDamageNexus = c.effect === "damage_nexus";
                     const healWouldWaste = isHealNexus && playerNexus >= STARTING_NEXUS;
                     const clickable = canPlay(c) && !healWouldWaste;
 
                     const handleClick = () => {
                       if (!clickable) return;
-                      if (autoCastable) { autoCast(c); }
-                      else { setSelectedCardUid(s => s === c.uid ? null : c.uid); }
+                      if (autoCastable) autoCast(c);
+                      else setSelectedCardUid((s) => (s === c.uid ? null : c.uid));
                     };
 
-                    const isUnit = c.type === "unit";
-                    const borderColor = selectedCardUid === c.uid ? "border-amber-400 shadow-lg shadow-amber-400/40" : "border-slate-600/80";
-
                     return (
-                      <button
+                      <HandCard
                         key={c.uid}
+                        card={c}
+                        selected={selectedCardUid === c.uid}
+                        clickable={clickable}
+                        newlyBought={newlyBoughtUid === c.uid}
+                        healWouldWaste={healWouldWaste}
                         onClick={handleClick}
-                        disabled={!clickable}
-                        title={healWouldWaste ? "Nexus already at full HP" : autoCastable ? "Tap to cast" : "Tap to select, then click a lane"}
-                        className={`group relative flex h-24 w-20 flex-col overflow-hidden rounded-lg border-2 transition-all duration-300 ${selectedCardUid === c.uid ? "-translate-y-2 scale-105" : "hover:-translate-y-1 hover:scale-[1.02]"} ${clickable ? "cursor-pointer" : "cursor-not-allowed opacity-50"} ${borderColor} ${newlyBoughtUid === c.uid ? "animate-bounce" : ""}`}
-                        style={{ background: '#0f172a' }}
-                      >
-                        {/* Full-bleed card art background */}
-                        <div className="absolute inset-0">
-                          <img
-                            src={`/images/card_${c.id}.jpg`}
-                            alt={c.name}
-                            className="h-full w-full object-cover opacity-70 group-hover:opacity-90 transition-opacity duration-300"
-                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                          />
-                          {/* Dark gradient overlay for text readability */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
-                        </div>
-
-                        {/* Cost badge */}
-                        <div className="absolute top-1 left-1 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-indigo-400/60 bg-indigo-600/90 text-[10px] font-black text-white shadow">{c.cost}</div>
-
-                        {/* Type badge */}
-                        <div className="absolute top-1 right-1 z-10 rounded border border-white/20 bg-black/60 px-1 py-0.5 text-[7px] font-bold uppercase tracking-wider text-white/90">
-                          {isDamageNexus ? "💥nex" : isHealNexus ? "♥nex" : isUnit ? "unit" : "spell"}
-                        </div>
-
-                        {/* Card info at bottom */}
-                        <div className="relative z-10 mt-auto flex flex-col gap-0.5 p-1.5">
-                          <div className="text-center text-[10px] font-bold leading-tight text-white drop-shadow">{c.name}</div>
-                          {isUnit ? (
-                            <div className="flex justify-center gap-1.5 text-xs font-bold">
-                              <span className="rounded bg-amber-500/90 px-1.5 py-0.5 text-slate-900 shadow text-[9px]">⚔{c.atk}</span>
-                              <span className="rounded bg-emerald-500/90 px-1.5 py-0.5 text-slate-900 shadow text-[9px]">♥{c.hp}</span>
-                            </div>
-                          ) : (
-                            <div className="rounded bg-black/50 px-1.5 py-0.5 text-center text-[8px] font-semibold text-white/90">
-                              {isDamageNexus ? `💥-${c.value}` : isHealNexus ? `♥+${c.value}` : c.effect === "damage" ? `⚔${c.value}` : `💚${c.value}`}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Selected ring */}
-                        {selectedCardUid === c.uid && (
-                          <div className="absolute inset-0 z-20 rounded-xl ring-2 ring-amber-400 ring-offset-2 ring-offset-slate-900" />
-                        )}
-
-                        {/* Tap to Cast badge */}
-                        {autoCastable && clickable && (
-                          <div className="absolute -bottom-2 left-1/2 z-20 -translate-x-1/2 rounded-full bg-amber-400 px-2.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-slate-900 shadow">
-                            Tap to Cast
-                          </div>
-                        )}
-                      </button>
+                      />
                     );
                   })}
                 </div>
-                <button onClick={endTurn} disabled={phase !== "playerTurn" || busy || !!winner}
-                  className={`shrink-0 rounded-lg bg-gradient-to-b px-4 py-2 text-xs font-bold shadow transition ${phase === "playerTurn" && !busy && !winner ? "from-amber-400 to-amber-600 text-slate-900 shadow-amber-500/20 hover:brightness-110" : "cursor-not-allowed from-slate-700 to-slate-800 text-slate-500 shadow-none"}`}>
-                  End Turn ▶
-                </button>
+                <StrikeButton
+                  disabled={phase !== "playerTurn" || busy || !!winner}
+                  onClick={endTurn}
+                />
               </div>
             </div>
           </div>
 
-          {/* SIDEBAR */}
-          <aside className="flex flex-col gap-3">
-            {/* MAIN DECK (shared pool) - Face down */}
-            <div
-              className="relative overflow-hidden rounded-2xl border border-amber-500/30 p-3"
-              style={{
-                backgroundImage: `linear-gradient(180deg, rgba(30,27,75,0.9), rgba(15,23,42,0.94)), url('/images/card_assassin.jpg')`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center'
-              }}
-            >
-              <div className="mb-2 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm">🏪</span>
-                  <span className="text-sm font-bold">Main Deck</span>
-                  <span className="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-semibold text-amber-300">{mainDeck.length + shopEntries.length} total</span>
-                </div>
-                <button onClick={refreshShop} disabled={refreshes <= 0 || !!winner}
-                  className="rounded-md border border-indigo-500/40 bg-indigo-500/15 px-2 py-1 text-[10px] font-semibold text-indigo-200 hover:bg-indigo-500/25 disabled:cursor-not-allowed disabled:opacity-40">
-                  ↻ Refresh ({refreshes})
-                </button>
-              </div>
-              <div className="mb-2 text-[10px] text-slate-400">Buy to add to your deck. Cards shown face-down until bought.</div>
-              <div className="grid grid-cols-2 gap-2">
-                {shopEntries.map(entry => (
-                  <ShopBackCard key={entry.uid} entry={entry} canAfford={gold >= entry.def.price} canBuy={deckCards.length < MAX_DECK} onBuy={() => buyFromShop(entry)} />
-                ))}
-                {shopEntries.length === 0 && <div className="col-span-2 py-4 text-center text-xs text-slate-500">Main deck exhausted!</div>}
-              </div>
-            </div>
+          {/* RIGHT — Main Deck shop */}
+          <div className="order-2 lg:order-3">
+            <MainDeckShop<ShopEntry>
+              shopEntries={shopEntries}
+              mainDeckRemaining={mainDeck.length + shopEntries.length}
+              gold={gold}
+              deckFull={deckCards.length >= MAX_DECK}
+              refreshes={refreshes}
+              winner={!!winner}
+              onRefresh={refreshShop}
+              onBuy={buyFromShop}
+            />
+          </div>
 
-
-
-            {/* HOW IT WORKS */}
-            <div
-              className="relative overflow-hidden rounded-2xl border border-slate-700/60 p-3"
-              style={{
-                backgroundImage: `linear-gradient(180deg, rgba(15,23,42,0.9), rgba(2,6,23,0.96)), url('/images/card_acolyte.jpg')`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center 35%'
-              }}
-            >
-              <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">How It Works</h3>
-              <ul className="space-y-1 text-[10px] leading-snug text-slate-400">
-                <li>• <b className="text-amber-300">Main Deck</b>: shared pool, shown face-down until bought.</li>
-                <li>• <b>Buy</b> a card → revealed and added to your deck.</li>
-                <li>• <b className="text-sky-300">Your Deck</b>: your personal cards. Max {MAX_DECK}.</li>
-                <li>• <b className="text-rose-300">Playing a card consumes it permanently.</b></li>
-                <li>• <b className="text-emerald-300">Gold earned every round:</b></li>
-                <li className="pl-2">– Win: <b className="text-emerald-300">+{GOLD.WIN_ROUND + GOLD.INCOME_PER_ROUND}💰</b> · Tie: +{GOLD.TIE_ROUND + GOLD.INCOME_PER_ROUND}💰 · Lose: +{GOLD.LOSE_ROUND + GOLD.INCOME_PER_ROUND}💰</li>
-                <li>• Shop always has ≥1 unit. Refreshes 3× free/round.</li>
-                <li>• If deck empty &amp; broke: receive {GOLD.FREE_RESCUE}💰 rescue gold.</li>
-              </ul>
-            </div>
-          </aside>
+          {/* How It Works — mobile / tablet below shop */}
+          <HowItWorksPanel
+            className="order-4 lg:hidden"
+            maxDeck={MAX_DECK}
+            goldWin={GOLD.WIN_ROUND + GOLD.INCOME_PER_ROUND}
+            goldTie={GOLD.TIE_ROUND + GOLD.INCOME_PER_ROUND}
+            goldLose={GOLD.LOSE_ROUND + GOLD.INCOME_PER_ROUND}
+            freeRescue={GOLD.FREE_RESCUE}
+          />
         </div>
 
-        {toast && <div className="pointer-events-none fixed bottom-6 left-1/2 z-40 -translate-x-1/2 rounded-full border border-amber-400/50 bg-amber-500/90 px-4 py-2 text-sm font-semibold text-slate-900 shadow-lg animate-bounce">{toast}</div>}
+        {toast && (
+          <div className="pointer-events-none fixed bottom-6 left-1/2 z-40 -translate-x-1/2 rounded-full border border-amber-400/50 bg-amber-500/90 px-4 py-2 text-sm font-semibold text-slate-900 shadow-lg animate-bounce">
+            {toast}
+          </div>
+        )}
         {winner && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm animate-in fade-in duration-500">
-            <div className="w-[90%] max-w-sm rounded-2xl border border-slate-700 bg-gradient-to-b from-slate-900 to-slate-950 p-6 text-center shadow-2xl animate-in zoom-in-110 duration-700">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm">
+            <div className="stone-panel w-[90%] max-w-sm p-6 text-center shadow-2xl">
               <div className="mb-2 text-5xl animate-bounce">{winner === "player" ? "🏆" : "💀"}</div>
-              <h2 className="mb-1 text-2xl font-bold">{winner === "player" ? "Victory!" : "Defeat"}</h2>
+              <h2 className="font-display mb-1 text-2xl font-bold">
+                {winner === "player" ? "Victory!" : "Defeat"}
+              </h2>
               <p className="mb-2 text-sm text-slate-300">
-                {winner === "player" ? `The enemy nexus has fallen. +${GOLD.WIN_MATCH}💰` : "Your nexus was shattered."}
+                {winner === "player"
+                  ? `The enemy nexus has fallen. +${GOLD.WIN_MATCH}💰`
+                  : "Your nexus was shattered."}
               </p>
-              <p className="mb-4 text-xs text-amber-400/80 animate-pulse">
+              <p className="mb-4 animate-pulse text-xs text-amber-400/80">
                 Auto-resetting and starting new match...
               </p>
-              <button onClick={() => resetProgress(true)} className="w-full rounded-lg bg-gradient-to-b from-amber-400 to-amber-600 px-4 py-2 font-bold text-slate-900 hover:brightness-110">
-                Reset & Play Now
+              <button
+                type="button"
+                onClick={() => resetProgress(true)}
+                className="stone-btn w-full py-2.5 text-xs text-amber-100"
+              >
+                Reset &amp; Play Now
               </button>
             </div>
           </div>
@@ -1087,49 +1075,3 @@ export default function App() {
   );
 }
 
-// ========== SHOP CARD BACK ==========
-function ShopBackCard({ entry, canAfford, canBuy, onBuy }: {
-  entry: ShopEntry; canAfford: boolean; canBuy: boolean; onBuy: () => void;
-}) {
-  return (
-    <button
-      onClick={onBuy}
-      disabled={!canAfford || !canBuy}
-      className={`group relative flex h-36 flex-col justify-between rounded-lg border-2 p-2 text-left transition-all duration-300 ${
-        canAfford && canBuy
-          ? "border-amber-500/50 hover:-translate-y-1 hover:border-amber-400 cursor-pointer"
-          : "border-slate-700 cursor-not-allowed opacity-60"
-      }`}
-    >
-      {/* Card back design */}
-      <div className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-md"
-        style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 30%, #1e1b4b 60%, #0f172a 100%)' }}
-      >
-        {/* Subtle grid pattern */}
-        <div className="absolute inset-0 opacity-20" style={{
-          backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 6px, rgba(251,191,36,0.1) 6px, rgba(251,191,36,0.1) 7px), repeating-linear-gradient(90deg, transparent, transparent 6px, rgba(251,191,36,0.1) 6px, rgba(251,191,36,0.1) 7px)`
-        }} />
-        {/* Ornamental border */}
-        <div className="absolute inset-1 rounded border border-amber-500/30" />
-        <div className="absolute inset-2 rounded border border-amber-500/15" />
-        {/* Center emblem */}
-        <div className="relative flex h-14 w-14 items-center justify-center rounded-full border-2 border-amber-400/50 bg-gradient-to-br from-amber-600/30 to-rose-600/30 shadow-lg shadow-amber-500/20">
-          <span className="text-2xl">🎴</span>
-        </div>
-        <div className="relative mt-2 text-[9px] font-bold uppercase tracking-[0.2em] text-amber-400/50">
-          Mystery
-        </div>
-      </div>
-      {/* Price tag - the only thing visible */}
-      <div className={`absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full border-2 border-amber-300 text-xs font-black shadow-lg ${
-        canAfford ? "bg-amber-400 text-slate-900" : "bg-slate-700 text-slate-400"
-      }`}>
-        {entry.def.price}💰
-      </div>
-      {/* Type hint */}
-      <div className="absolute top-1 left-1 rounded bg-black/40 px-1.5 py-0.5 text-[8px] font-semibold text-slate-300">
-        {entry.def.type === "unit" ? "🗡️" : "✨"}
-      </div>
-    </button>
-  );
-}
