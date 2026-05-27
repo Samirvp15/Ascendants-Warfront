@@ -15,17 +15,18 @@ Open the URL shown in the terminal (typically `http://localhost:5173`).
 
 ## Documentation
 
-Full game mechanics, unit roster, spells, and strategy:
+| Doc | Purpose |
+|-----|---------|
+| **[Game Guide](docs/GAME_GUIDE.md)** | Mechanics, units, spells, strategy |
+| **[UI Guidelines](docs/UI_GUIDELINES.md)** | **Primary UI target** — layout, components, palette ([reference mockup](public/images/referenceGame.png)) |
 
-**[→ Game Guide (docs/GAME_GUIDE.md)](docs/GAME_GUIDE.md)**
+### UI reference (development target)
 
-Topics covered:
+All UI work should follow the mockup below:
 
-- Core gameplay loop and turn structure
-- Combat, lanes, and Nexus damage
-- Mana, gold, and shop economy
-- All 10 unit tiers and archetypes (Aggressor, Defender, Balanced, Titan)
-- Spell reference and strategy tips
+![UI reference mockup](public/images/referenceGame.png)
+
+See **[docs/UI_GUIDELINES.md](docs/UI_GUIDELINES.md)** for layout zones, component specs, colors, and an implementation checklist.
 
 ## Tech stack
 
@@ -36,7 +37,8 @@ Topics covered:
 ## Project structure
 
 ```
-src/App.tsx          — Game logic, card library, UI
-public/images/       — Card art and battlefield assets
-docs/GAME_GUIDE.md   — Player-facing game documentation
+src/App.tsx                    — Game logic, card library, UI
+public/images/                 — Card art, battlefield, referenceGame.png
+docs/GAME_GUIDE.md             — Player-facing game documentation
+docs/UI_GUIDELINES.md          — UI development guidelines (reference mockup)
 ```

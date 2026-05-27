@@ -20,6 +20,8 @@ A lane-based tactical card battler where you deploy units, cast spells, and outm
 12. [Strategy Tips](#strategy-tips)
 13. [Quick Reference](#quick-reference)
 
+**Developers:** UI layout and visual target → [UI Guidelines](./UI_GUIDELINES.md) (based on `public/images/referenceGame.png`).
+
 ---
 
 ## Overview
