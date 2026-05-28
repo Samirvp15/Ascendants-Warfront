@@ -17,6 +17,7 @@ type PlayerHandDeckProps = {
   strikeDisabled: boolean;
   onStrike: () => void;
   className?: string;
+  embedded?: boolean;
   children: ReactNode;
 };
 
@@ -34,6 +35,7 @@ export function PlayerHandDeck({
   strikeDisabled,
   onStrike,
   className = "",
+  embedded = false,
   children,
 }: PlayerHandDeckProps) {
   const showStatus = selectedCardName || isMoving || deckEmpty || deckCount <= 2;
@@ -41,8 +43,13 @@ export function PlayerHandDeck({
   return (
     <AbsoluteFrame
       image="/images/hand_deck_player.png"
-      className={cn("bottom-0 left-1/2 z-30 w-[var(--hand-w)] -translate-x-1/2", className)}
-      bgStyle={{ top: "-8%", bottom: "-3%", height: "auto" }}
+      className={cn(
+        embedded
+          ? "inset-0 h-full w-full"
+          : "bottom-0 left-1/2 z-30 w-[var(--hand-w)] -translate-x-1/2",
+        className
+      )}
+      bgStyle={embedded ? undefined : { top: "-8%", bottom: "-3%", height: "auto" }}
     >
       <div
         className={cn("absolute tabular-nums", flashMana && "animate-pulse")}

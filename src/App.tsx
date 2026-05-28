@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AbsoluteFrame, AbsoluteFrameAnchor } from "./components/layout/AbsoluteFrame";
 import { EnemyStrip } from "./components/ui/EnemyStrip";
-import { GameHeader } from "./components/ui/GameHeader";
+import { GameControls, GameSidebar } from "./components/ui/GameHeader";
 import { HandCard } from "./components/ui/HandCard";
 import { MainDeckShop } from "./components/ui/MainDeckShop";
 import { PlayerHandDeck } from "./components/ui/PlayerHandDeck";
@@ -748,50 +748,44 @@ export default function App() {
         backgroundAttachment: "fixed",
       }}
     >
-      <div className="absolute-frame-anchor flex h-full w-full flex-col overflow-visible">
-        <GameHeader
+      <div
+        className="game-columns grid h-full w-full min-h-0 overflow-visible"
+        style={{ gridTemplateColumns: "var(--sidebar-w) 1fr var(--shop-w)" }}
+      >
+        <GameSidebar
           round={round}
           mainDeckRemaining={mainDeck.length + shopEntries.length}
-          displayGold={displayGold}
-          flashGold={flashGold}
           maxDeck={MAX_DECK}
           goldWin={GOLD.WIN_ROUND + GOLD.INCOME_PER_ROUND}
           goldTie={GOLD.TIE_ROUND + GOLD.INCOME_PER_ROUND}
           goldLose={GOLD.LOSE_ROUND + GOLD.INCOME_PER_ROUND}
           freeRescue={GOLD.FREE_RESCUE}
-          onNewMatch={initMatch}
-          onReset={() => resetProgress()}
         />
 
-        <div
-          className="grid min-h-0 flex-1"
-          style={{ gridTemplateColumns: "1fr var(--shop-w)" }}
-        >
-          {/* Battlefield — absolute overlapping layers */}
-          <div className="relative flex h-[var(--main-h)] min-h-0 items-stretch justify-center overflow-visible">
-            <AbsoluteFrameAnchor
-              className="h-full overflow-visible"
-              style={{ width: "var(--arena-w)" }}
-            >
-              <EnemyStrip
-                className="h-[var(--enemy-h)]"
-                enemyMana={enemyMana}
-                enemyMaxMana={enemyMaxMana}
-                displayEnemyNexus={displayEnemyNexus}
-                nexusMax={STARTING_NEXUS}
-                enemyDeckCount={enemyDeck.length}
-                flashMana={flashMana === "enemy"}
-                flashNexus={flashNexus === "enemy"}
-                activeTurn={currentTurn === "enemy"}
-              />
+        {/* Center column — enemy top, lanes middle, hand deck bottom */}
+        <main className="flex h-full min-h-0 flex-col items-center overflow-hidden py-[var(--arena-gap)]">
+          <div
+            className="relative shrink-0"
+            style={{ width: "var(--enemy-w)", height: "var(--enemy-h)" }}
+          >
+            <EnemyStrip
+              embedded
+              enemyMana={enemyMana}
+              enemyMaxMana={enemyMaxMana}
+              displayEnemyNexus={displayEnemyNexus}
+              nexusMax={STARTING_NEXUS}
+              enemyDeckCount={enemyDeck.length}
+              flashMana={flashMana === "enemy"}
+              flashNexus={flashNexus === "enemy"}
+              activeTurn={currentTurn === "enemy"}
+            />
+          </div>
 
-              <div
-                className="absolute left-0 right-0 z-20 grid grid-cols-3 gap-[0.3%]"
-                style={{
-                  top: "calc(var(--enemy-h) * 0.58)",
-                  bottom: "calc(var(--hand-h) * 0.58)",
-                }}
-              >
+          <div className="flex min-h-0 w-full flex-1 items-center justify-center">
+            <div
+              className="relative grid min-h-0 shrink-0 grid-cols-3 gap-[0.3%]"
+              style={{ width: "var(--arena-w)", height: "var(--lanes-h)" }}
+            >
               {LANES.map((lane) => {
                 const e = enemyBoard[lane],
                   p = playerBoard[lane];
@@ -911,11 +905,16 @@ export default function App() {
                   </AbsoluteFrameAnchor>
                 );
               })}
-              </div>
+            </div>
+          </div>
 
-              <PlayerHandDeck
-                className="h-[var(--hand-h)]"
-                playerMana={playerMana}
+          <div
+            className="relative shrink-0"
+            style={{ width: "var(--hand-w)", height: "var(--hand-h)" }}
+          >
+            <PlayerHandDeck
+              embedded
+              playerMana={playerMana}
                 playerMaxMana={playerMaxMana}
                 displayPlayerNexus={displayPlayerNexus}
                 nexusMax={STARTING_NEXUS}
@@ -958,12 +957,19 @@ export default function App() {
                     />
                   );
                 })}
-              </PlayerHandDeck>
-            </AbsoluteFrameAnchor>
+            </PlayerHandDeck>
           </div>
+        </main>
 
-          {/* Main Deck shop — absolute frame, may overlap left */}
-          <AbsoluteFrameAnchor className="h-[var(--main-h)] min-h-0 overflow-visible">
+        {/* Right column — controls + main deck shop */}
+        <div className="flex h-full min-h-0 flex-col overflow-visible">
+          <GameControls
+            displayGold={displayGold}
+            flashGold={flashGold}
+            onNewMatch={initMatch}
+            onReset={() => resetProgress()}
+          />
+          <AbsoluteFrameAnchor className="min-h-0 flex-1 overflow-visible">
             <MainDeckShop<ShopEntry>
               shopEntries={shopEntries}
               mainDeckRemaining={mainDeck.length + shopEntries.length}
@@ -977,6 +983,7 @@ export default function App() {
             />
           </AbsoluteFrameAnchor>
         </div>
+      </div>
 
         {toast && (
           <div className="pointer-events-none fixed bottom-6 left-1/2 z-40 -translate-x-1/2 rounded-full border border-amber-400/50 bg-amber-500/90 px-4 py-2 text-sm font-semibold text-slate-900 shadow-lg animate-bounce">
@@ -1008,7 +1015,6 @@ export default function App() {
             </div>
           </div>
         )}
-      </div>
     </div>
   );
 }

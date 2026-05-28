@@ -11,6 +11,7 @@ type EnemyStripProps = {
   flashNexus: boolean;
   activeTurn: boolean;
   className?: string;
+  embedded?: boolean;
 };
 
 export function EnemyStrip({
@@ -23,16 +24,20 @@ export function EnemyStrip({
   flashNexus,
   activeTurn,
   className = "",
+  embedded = false,
 }: EnemyStripProps) {
   return (
     <AbsoluteFrame
       image="/images/enemy_strip.png"
       className={cn(
-        "left-1/2 top-0 z-30 w-[var(--enemy-w)] -translate-x-1/2 transition-all duration-700",
+        embedded
+          ? "inset-0 h-full w-full"
+          : "left-1/2 top-0 z-30 w-[var(--enemy-w)] -translate-x-1/2",
+        "transition-all duration-700",
         activeTurn && "ring-1 ring-rose-400/40",
         className
       )}
-      bgStyle={{ top: "-4%", bottom: "-10%", height: "auto" }}
+      bgStyle={embedded ? undefined : { top: "-4%", bottom: "-10%", height: "auto" }}
       contentClassName="grid grid-cols-[10%_1fr_13%] grid-rows-[48%_52%] px-[2.8%] pb-[8.5%] pt-[5.5%]"
     >
       <div className="row-span-2 flex items-center justify-center">

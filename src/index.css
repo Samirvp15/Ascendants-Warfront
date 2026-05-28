@@ -35,21 +35,23 @@ body {
   overflow: hidden;
 }
 
-/* Full-bleed layout — centered arena + compact shop */
+/* Three-column layout: sidebar | arena | shop */
 .game-layout {
-  --header-h: clamp(112px, 14vh, 158px);
-  --main-h: calc(100vh - var(--header-h));
-  --shop-w: min(20vw, 260px, calc(var(--main-h) * 379 / 658));
-  --play-w: calc(100vw - var(--shop-w));
-  --arena-w: min(calc(var(--play-w) * 0.78), 860px);
-  --hiw-scale: 1.55;
-  --hiw-w: calc(var(--header-h) * 447 / 558 * var(--hiw-scale));
-  --hiw-h: calc(var(--header-h) * 1.42);
-  --logo-h: calc(var(--header-h) * 1.22);
+  --sidebar-w: min(calc(100vw * 0.21), 300px);
+  --shop-w: min(20vw, 260px, calc(100vh * 379 / 658));
+  --center-w: calc(100vw - var(--sidebar-w) - var(--shop-w));
+  --main-h: 100vh;
+  --arena-w: min(calc(var(--center-w) * 0.9), 820px);
+  --logo-block-h: clamp(118px, 18vh, 168px);
+  --logo-h: min(calc(var(--sidebar-w) * 0.52), calc(var(--logo-block-h) * 0.92));
+  --hiw-w: calc(var(--sidebar-w) * 0.94);
+  --hiw-h: calc(var(--hiw-w) * 558 / 447);
   --enemy-w: calc(var(--arena-w) * 0.76);
   --enemy-h: min(calc(var(--enemy-w) * 322 / 774 * 0.9), calc(var(--main-h) * 0.115));
   --hand-w: calc(var(--arena-w) * 0.76);
   --hand-h: min(calc(var(--hand-w) * 380 / 657 * 0.9), calc(var(--main-h) * 0.22));
+  --lanes-h: min(calc(var(--arena-w) * 379 / 658 * 1.2), calc(var(--main-h) * 0.62));
+  --arena-gap: clamp(4px, 0.55vh, 10px);
   --lane-inset-x: 2.5%;
   --lane-inset-y: 1.75%;
 }
