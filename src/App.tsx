@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { EnemyStrip } from "./components/ui/EnemyStrip";
 import { GameHeader } from "./components/ui/GameHeader";
 import { HandCard } from "./components/ui/HandCard";
-import { HowItWorksPanel } from "./components/ui/HowItWorksPanel";
 import { MainDeckShop } from "./components/ui/MainDeckShop";
-import { ResourceBar } from "./components/ui/ResourceBar";
-import { StrikeButton } from "./components/ui/StrikeButton";
+import { PlayerHandDeck } from "./components/ui/PlayerHandDeck";
 import { EmptySlot, UnitCard } from "./components/ui/UnitCard";
 import { cn } from "./utils/cn";
 
@@ -740,7 +739,7 @@ export default function App() {
 
   return (
     <div
-      className="min-h-screen w-full"
+      className="game-shell game-layout w-full"
       style={{
         backgroundImage: `url('/images/bg_battlefield.png')`,
         backgroundSize: "cover",
@@ -748,66 +747,44 @@ export default function App() {
         backgroundAttachment: "fixed",
       }}
     >
-      <div className="mx-auto max-w-[1400px] px-3">
+      <div className="flex h-full w-full flex-col">
         <GameHeader
           round={round}
           mainDeckRemaining={mainDeck.length + shopEntries.length}
           displayGold={displayGold}
           flashGold={flashGold}
+          maxDeck={MAX_DECK}
+          goldWin={GOLD.WIN_ROUND + GOLD.INCOME_PER_ROUND}
+          goldTie={GOLD.TIE_ROUND + GOLD.INCOME_PER_ROUND}
+          goldLose={GOLD.LOSE_ROUND + GOLD.INCOME_PER_ROUND}
+          freeRescue={GOLD.FREE_RESCUE}
           onNewMatch={initMatch}
           onReset={() => resetProgress()}
         />
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[220px_1fr_260px]">
-          {/* LEFT — How It Works (desktop) */}
-          <HowItWorksPanel
-            className="order-3 hidden lg:order-1 lg:block"
-            maxDeck={MAX_DECK}
-            goldWin={GOLD.WIN_ROUND + GOLD.INCOME_PER_ROUND}
-            goldTie={GOLD.TIE_ROUND + GOLD.INCOME_PER_ROUND}
-            goldLose={GOLD.LOSE_ROUND + GOLD.INCOME_PER_ROUND}
-            freeRescue={GOLD.FREE_RESCUE}
-          />
-
-          {/* CENTER — Battlefield */}
-          <div className="order-1 flex flex-col gap-3 lg:order-2">
-            {/* Enemy strip */}
+        <div
+          className="grid min-h-0 flex-1"
+          style={{ gridTemplateColumns: "1fr var(--shop-w)" }}
+        >
+          {/* Battlefield — arena centered in play area */}
+          <div className="relative flex h-[var(--main-h)] min-h-0 items-stretch justify-center">
             <div
-              className={cn(
-                "stone-panel overflow-hidden px-3 py-2.5 transition-all duration-700",
-                currentTurn === "enemy" && "ring-1 ring-rose-400/40"
-              )}
-              style={{
-                backgroundImage: `linear-gradient(90deg, rgba(76,5,25,0.92), rgba(15,23,42,0.86)), url('/images/card_raider.jpg')`,
-                backgroundSize: "cover",
-                backgroundPosition: "center 38%",
-              }}
+              className="flex h-full min-h-0 flex-col"
+              style={{ width: "var(--arena-w)" }}
             >
-              <div className="mb-2 flex items-center gap-2">
-                <span className="text-xl">👹</span>
-                <span className="font-display text-sm font-bold text-rose-100">Enemy</span>
-                <span className="text-[10px] text-slate-400">· {enemyDeck.length} cards</span>
-              </div>
-              <div className="space-y-1.5">
-                <ResourceBar
-                  variant="mana"
-                  current={enemyMana}
-                  max={enemyMaxMana}
-                  flash={flashMana === "enemy"}
-                  compact
-                />
-                <ResourceBar
-                  variant="nexus"
-                  current={displayEnemyNexus}
-                  max={STARTING_NEXUS}
-                  flash={flashNexus === "enemy"}
-                  compact
-                />
-              </div>
-            </div>
+            <EnemyStrip
+              className="h-[var(--enemy-h)] shrink-0"
+              enemyMana={enemyMana}
+              enemyMaxMana={enemyMaxMana}
+              displayEnemyNexus={displayEnemyNexus}
+              nexusMax={STARTING_NEXUS}
+              enemyDeckCount={enemyDeck.length}
+              flashMana={flashMana === "enemy"}
+              flashNexus={flashNexus === "enemy"}
+              activeTurn={currentTurn === "enemy"}
+            />
 
-            {/* Lanes */}
-            <div className="grid grid-cols-3 gap-2 md:gap-3">
+            <div className="grid min-h-0 flex-1 grid-cols-3 gap-0.5">
               {LANES.map((lane) => {
                 const e = enemyBoard[lane],
                   p = playerBoard[lane];
@@ -834,20 +811,19 @@ export default function App() {
                     key={lane}
                     onClick={handleLaneClick}
                     className={cn(
-                      "lane-frame relative flex min-h-[380px] flex-col gap-2 p-2 transition-all duration-500 md:min-h-[420px]",
+                      "lane-frame relative flex h-full min-h-0 flex-col gap-0 p-1 transition-all duration-500",
                       (validTarget || isMoveTarget) && "lane-frame-target cursor-pointer"
                     )}
-                    style={{
-                      backgroundImage: `linear-gradient(180deg, rgba(15,23,42,0.78), rgba(2,6,23,0.92)), url('/images/bg_battlefield.png')`,
-                      backgroundSize: "cover",
-                      backgroundPosition: `center ${30 + lane * 15}%`,
-                    }}
                   >
-                    <div className="text-center font-display text-[10px] font-bold uppercase tracking-[0.25em] text-amber-500/70">
-                      Lane {lane + 1}
-                    </div>
+                    <img
+                      src="/images/main_deck.png"
+                      alt=""
+                      aria-hidden
+                      className="pointer-events-none absolute inset-0 h-full w-full select-none object-fill"
+                      draggable={false}
+                    />
 
-                    <div className="flex flex-1 flex-col items-center justify-center">
+                    <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center">
                       {e ? (
                         <UnitCard
                           cardId={e.cardId}
@@ -875,7 +851,7 @@ export default function App() {
                       )}
                     </div>
 
-                    <div className="relative flex items-center py-1">
+                    <div className="relative z-10 flex shrink-0 items-center py-0.5">
                       <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
                       {p && e && (
                         <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-amber-400">
@@ -884,7 +860,7 @@ export default function App() {
                       )}
                     </div>
 
-                    <div className="flex flex-1 flex-col items-center justify-center">
+                    <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center">
                       {p ? (
                         <UnitCard
                           cardId={p.cardId}
@@ -920,102 +896,59 @@ export default function App() {
                   </div>
                 );
               })}
-            </div>
-
-            {/* Player strip */}
-            <div
-              className={cn(
-                "stone-panel flex flex-col gap-3 overflow-hidden p-3 transition-all duration-700",
-                currentTurn === "player" && "ring-1 ring-sky-400/35"
-              )}
-              style={{
-                backgroundImage: `linear-gradient(180deg, rgba(8,47,73,0.88), rgba(15,23,42,0.94)), url('/images/card_knight.jpg')`,
-                backgroundSize: "cover",
-                backgroundPosition: "center 42%",
-              }}
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">🛡️</span>
-                  <span className="font-display text-sm font-bold text-sky-100">You</span>
-                  <span
-                    className={cn(
-                      "text-[10px]",
-                      deckCards.length <= 2 ? "font-semibold text-amber-400" : "text-slate-500"
-                    )}
-                  >
-                    · {deckCards.length === 0 ? "⚠ empty" : `${deckCards.length} cards`}
-                  </span>
-                  {selectedCard && (
-                    <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-300 animate-pulse">
-                      {selectedCard.name} → lane
-                    </span>
-                  )}
-                  {movingUnitId && !selectedCard && (
-                    <span className="rounded-full border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-[10px] font-bold text-sky-300 animate-pulse">
-                      Moving → lane
-                    </span>
-                  )}
-                </div>
               </div>
 
-              <div className="space-y-1.5">
-                <ResourceBar
-                  variant="mana"
-                  current={playerMana}
-                  max={playerMaxMana}
-                  flash={flashMana === "player"}
-                />
-                <ResourceBar
-                  variant="nexus"
-                  current={displayPlayerNexus}
-                  max={STARTING_NEXUS}
-                  flash={flashNexus === "player"}
-                />
-              </div>
+              <PlayerHandDeck
+                className="h-[var(--hand-h)] shrink-0"
+                playerMana={playerMana}
+                playerMaxMana={playerMaxMana}
+                displayPlayerNexus={displayPlayerNexus}
+                nexusMax={STARTING_NEXUS}
+                flashMana={flashMana === "player"}
+                flashNexus={flashNexus === "player"}
+                deckCount={deckCards.length}
+                deckEmpty={deckCards.length === 0}
+                selectedCardName={selectedCard?.name ?? null}
+                isMoving={movingUnitId !== null && !selectedCard}
+                strikeDisabled={phase !== "playerTurn" || busy || !!winner}
+                onStrike={endTurn}
+              >
+                {deckCards.length === 0 && (
+                  <div className="flex w-full items-center justify-center px-2 py-1 text-center text-[9px] text-rose-200 drop-shadow-md">
+                    ⚠️ Deck empty! Buy from Main Deck →
+                  </div>
+                )}
+                {deckCards.map((c) => {
+                  const autoCastable = isAutoCast(c);
+                  const isHealNexus = c.effect === "heal_nexus";
+                  const healWouldWaste = isHealNexus && playerNexus >= STARTING_NEXUS;
+                  const clickable = canPlay(c) && !healWouldWaste;
 
-              <div className="flex items-end gap-3">
-                <div className="flex min-h-[112px] flex-1 gap-2 overflow-x-auto pb-1">
-                  {deckCards.length === 0 && (
-                    <div className="flex w-full items-center justify-center rounded border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-center text-[10px] text-rose-300">
-                      ⚠️ Deck empty! Buy cards from the Main Deck →
-                    </div>
-                  )}
-                  {deckCards.map((c) => {
-                    const autoCastable = isAutoCast(c);
-                    const isHealNexus = c.effect === "heal_nexus";
-                    const healWouldWaste = isHealNexus && playerNexus >= STARTING_NEXUS;
-                    const clickable = canPlay(c) && !healWouldWaste;
+                  const handleClick = () => {
+                    if (!clickable) return;
+                    if (autoCastable) autoCast(c);
+                    else setSelectedCardUid((s) => (s === c.uid ? null : c.uid));
+                  };
 
-                    const handleClick = () => {
-                      if (!clickable) return;
-                      if (autoCastable) autoCast(c);
-                      else setSelectedCardUid((s) => (s === c.uid ? null : c.uid));
-                    };
-
-                    return (
-                      <HandCard
-                        key={c.uid}
-                        card={c}
-                        selected={selectedCardUid === c.uid}
-                        clickable={clickable}
-                        newlyBought={newlyBoughtUid === c.uid}
-                        healWouldWaste={healWouldWaste}
-                        onClick={handleClick}
-                      />
-                    );
-                  })}
-                </div>
-                <StrikeButton
-                  disabled={phase !== "playerTurn" || busy || !!winner}
-                  onClick={endTurn}
-                />
-              </div>
+                  return (
+                    <HandCard
+                      key={c.uid}
+                      card={c}
+                      compact
+                      selected={selectedCardUid === c.uid}
+                      clickable={clickable}
+                      newlyBought={newlyBoughtUid === c.uid}
+                      healWouldWaste={healWouldWaste}
+                      onClick={handleClick}
+                    />
+                  );
+                })}
+              </PlayerHandDeck>
             </div>
           </div>
 
-          {/* RIGHT — Main Deck shop */}
-          <div className="order-2 lg:order-3">
+          {/* Main Deck shop — compact right column */}
+          <div className="relative h-[var(--main-h)] min-h-0">
             <MainDeckShop<ShopEntry>
               shopEntries={shopEntries}
               mainDeckRemaining={mainDeck.length + shopEntries.length}
@@ -1025,18 +958,9 @@ export default function App() {
               winner={!!winner}
               onRefresh={refreshShop}
               onBuy={buyFromShop}
+              className="h-full"
             />
           </div>
-
-          {/* How It Works — mobile / tablet below shop */}
-          <HowItWorksPanel
-            className="order-4 lg:hidden"
-            maxDeck={MAX_DECK}
-            goldWin={GOLD.WIN_ROUND + GOLD.INCOME_PER_ROUND}
-            goldTie={GOLD.TIE_ROUND + GOLD.INCOME_PER_ROUND}
-            goldLose={GOLD.LOSE_ROUND + GOLD.INCOME_PER_ROUND}
-            freeRescue={GOLD.FREE_RESCUE}
-          />
         </div>
 
         {toast && (

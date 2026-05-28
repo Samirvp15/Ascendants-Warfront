@@ -10,16 +10,18 @@ type ShopBackCardProps = {
   canAfford: boolean;
   canBuy: boolean;
   onBuy: () => void;
+  compact?: boolean;
 };
 
-export function ShopBackCard({ entry, canAfford, canBuy, onBuy }: ShopBackCardProps) {
+export function ShopBackCard({ entry, canAfford, canBuy, onBuy, compact = false }: ShopBackCardProps) {
   return (
     <button
       type="button"
       onClick={onBuy}
       disabled={!canAfford || !canBuy}
       className={cn(
-        "group relative flex h-32 w-full flex-col rounded-lg border-2 p-1.5 text-left transition-all duration-300",
+        "group relative flex w-full min-h-0 flex-1 flex-col rounded-lg border-2 p-1 text-left transition-all duration-300",
+        compact ? "min-h-[52px]" : "h-32",
         canAfford && canBuy
           ? "cursor-pointer border-amber-600/60 hover:-translate-y-0.5 hover:border-amber-400"
           : "cursor-not-allowed border-slate-700 opacity-60"
@@ -39,10 +41,10 @@ export function ShopBackCard({ entry, canAfford, canBuy, onBuy }: ShopBackCardPr
         />
         <div className="absolute inset-1 rounded border border-amber-500/30" />
         <div className="absolute inset-2 rounded border border-amber-500/15" />
-        <div className="relative flex h-12 w-12 items-center justify-center rounded-full border-2 border-amber-400/50 bg-gradient-to-br from-amber-600/30 to-rose-600/30 shadow-lg shadow-amber-500/20">
-          <span className="text-xl">🎴</span>
+        <div className="relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-amber-400/50 bg-gradient-to-br from-amber-600/30 to-rose-600/30 shadow-lg shadow-amber-500/20">
+          <span className={compact ? "text-sm" : "text-xl"}>🎴</span>
         </div>
-        <div className="relative mt-2 text-[9px] font-bold uppercase tracking-[0.25em] text-amber-400/60">
+        <div className={cn("relative font-bold uppercase tracking-[0.25em] text-amber-400/60", compact ? "mt-1 text-[7px]" : "mt-2 text-[9px]")}>
           Mystery
         </div>
       </div>

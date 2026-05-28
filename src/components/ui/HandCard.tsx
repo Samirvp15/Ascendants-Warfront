@@ -18,6 +18,7 @@ type HandCardProps = {
   clickable: boolean;
   newlyBought: boolean;
   healWouldWaste: boolean;
+  compact?: boolean;
   onClick: () => void;
 };
 
@@ -27,6 +28,7 @@ export function HandCard({
   clickable,
   newlyBought,
   healWouldWaste,
+  compact = false,
   onClick,
 }: HandCardProps) {
   const isUnit = card.type === "unit";
@@ -47,8 +49,9 @@ export function HandCard({
             : "Tap to select, then click a lane"
       }
       className={cn(
-        "card-frame group relative flex h-[108px] w-[76px] shrink-0 flex-col overflow-hidden transition-all duration-300",
-        selected && "-translate-y-2 scale-105 border-amber-400 shadow-lg shadow-amber-400/40",
+        "card-frame group relative shrink-0 flex-col overflow-hidden transition-all duration-300",
+        compact ? "flex h-[112px] w-[78px]" : "flex h-[108px] w-[76px]",
+        selected && (compact ? "-translate-y-1 scale-105 border-amber-400 shadow-lg shadow-amber-400/40" : "-translate-y-2 scale-105 border-amber-400 shadow-lg shadow-amber-400/40"),
         clickable ? "cursor-pointer hover:-translate-y-1 hover:scale-[1.02]" : "cursor-not-allowed opacity-50",
         newlyBought && "animate-bounce"
       )}
@@ -65,29 +68,29 @@ export function HandCard({
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/55 to-transparent" />
       </div>
 
-      <div className="absolute left-1 top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-blue-400/60 bg-blue-700/95 text-[10px] font-black text-white shadow">
+      <div className={cn("absolute left-1 top-1 z-10 flex items-center justify-center rounded-full border border-blue-400/60 bg-blue-700/95 font-black text-white shadow", compact ? "h-4 w-4 text-[8px]" : "h-5 w-5 text-[10px]")}>
         {card.cost}
       </div>
 
-      <div className="absolute right-1 top-1 z-10 rounded border border-white/20 bg-black/65 px-1 py-0.5 text-[7px] font-bold uppercase tracking-wider text-white/90">
+      <div className={cn("absolute right-1 top-1 z-10 rounded border border-white/20 bg-black/65 px-1 py-0.5 font-bold uppercase tracking-wider text-white/90", compact ? "text-[6px]" : "text-[7px]")}>
         {isDamageNexus ? "💥nex" : isHealNexus ? "♥nex" : isUnit ? "unit" : "spell"}
       </div>
 
-      <div className="relative z-10 mt-auto p-1.5">
-        <div className="card-nameplate mb-1 px-1 py-0.5 text-center">
-          <div className="font-display truncate text-[9px] font-bold text-amber-50">{card.name}</div>
+      <div className={cn("relative z-10 mt-auto", compact ? "p-1" : "p-1.5")}>
+        <div className={cn("card-nameplate mb-0.5 px-1 py-0.5 text-center", compact && "mb-0")}>
+          <div className={cn("font-display truncate font-bold text-amber-50", compact ? "text-[7px]" : "text-[9px]")}>{card.name}</div>
         </div>
         {isUnit ? (
-          <div className="flex justify-between gap-1">
-            <span className="rounded border border-amber-600/40 bg-amber-500/95 px-1 py-0.5 text-[8px] font-extrabold text-slate-900">
+          <div className="flex justify-between gap-0.5">
+            <span className={cn("rounded border border-amber-600/40 bg-amber-500/95 font-extrabold text-slate-900", compact ? "px-0.5 py-0 text-[7px]" : "px-1 py-0.5 text-[8px]")}>
               ⚔{card.atk}
             </span>
-            <span className="rounded border border-emerald-700/40 bg-emerald-500/95 px-1 py-0.5 text-[8px] font-extrabold text-slate-900">
+            <span className={cn("rounded border border-emerald-700/40 bg-emerald-500/95 font-extrabold text-slate-900", compact ? "px-0.5 py-0 text-[7px]" : "px-1 py-0.5 text-[8px]")}>
               ♥{card.hp}
             </span>
           </div>
         ) : (
-          <div className="rounded bg-black/55 px-1 py-0.5 text-center text-[8px] font-semibold text-white/90">
+          <div className={cn("rounded bg-black/55 px-1 py-0.5 text-center font-semibold text-white/90", compact ? "text-[7px]" : "text-[8px]")}>
             {isDamageNexus
               ? `💥-${card.value}`
               : isHealNexus
@@ -104,7 +107,7 @@ export function HandCard({
       )}
 
       {autoCastable && clickable && (
-        <div className="absolute -bottom-2 left-1/2 z-20 -translate-x-1/2 rounded-full bg-amber-400 px-2 py-0.5 text-[7px] font-black uppercase tracking-wider text-slate-900 shadow">
+        <div className={cn("absolute left-1/2 z-20 -translate-x-1/2 rounded-full bg-amber-400 font-black uppercase tracking-wider text-slate-900 shadow", compact ? "-bottom-1.5 px-1.5 py-0 text-[6px]" : "-bottom-2 px-2 py-0.5 text-[7px]")}>
           Tap
         </div>
       )}

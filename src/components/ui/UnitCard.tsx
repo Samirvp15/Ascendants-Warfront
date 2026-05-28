@@ -35,7 +35,7 @@ export function UnitCard({
     <div
       onClick={onClick}
       className={cn(
-        "card-frame relative flex h-[168px] w-full flex-col overflow-hidden transition-all duration-700",
+        "card-frame relative flex h-full max-h-[130px] w-full max-w-[155px] flex-col overflow-hidden transition-all duration-700",
         isEnemy ? "border-rose-700/70" : "cursor-pointer border-sky-600/70",
         selected && "scale-105 ring-2 ring-amber-400 shadow-lg shadow-amber-400/30",
         showDmg && dmg != null && "ring-2 ring-rose-400/60",
@@ -105,7 +105,7 @@ export function EmptySlot({ label, active }: EmptySlotProps) {
   return (
     <div
       className={cn(
-        "flex h-20 w-full items-center justify-center rounded-md border border-dashed text-[11px]",
+        "flex h-full max-h-[76px] w-full max-w-[155px] items-center justify-center rounded-md border border-dashed text-[9px]",
         active ? "border-amber-400/70 bg-amber-400/5 text-amber-300" : "border-slate-600/50 text-slate-600"
       )}
     >

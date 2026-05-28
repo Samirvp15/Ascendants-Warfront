@@ -1,3 +1,5 @@
+import { UI_ASPECT } from "../../utils/layoutTokens";
+
 type HowItWorksPanelProps = {
   maxDeck: number;
   goldWin: number;
@@ -17,40 +19,46 @@ export function HowItWorksPanel({
 }: HowItWorksPanelProps) {
   return (
     <div
-      className={`stone-panel relative overflow-hidden p-3 ${className}`}
-      style={{
-        backgroundImage: `linear-gradient(180deg, rgba(15,23,42,0.92), rgba(2,6,23,0.96)), url('/images/card_acolyte.jpg')`,
-        backgroundSize: "cover",
-        backgroundPosition: "center 35%",
-      }}
+      className={`relative h-full shrink-0 ${className}`}
+      style={{ aspectRatio: UI_ASPECT.howItWorks }}
     >
-      <h3 className="font-display mb-3 text-center text-xs font-bold uppercase tracking-[0.2em] text-amber-400/90">
-        How It Works
-      </h3>
-      <ul className="space-y-1.5 text-[10px] leading-snug text-slate-400">
-        <li>
-          • <b className="text-amber-300">Main Deck</b>: shared pool, face-down until bought.
-        </li>
-        <li>
-          • <b className="text-slate-200">Buy</b> a card → revealed and added to your deck.
-        </li>
-        <li>
-          • <b className="text-sky-300">Your Deck</b>: personal cards. Max {maxDeck}.
-        </li>
-        <li>
-          • <b className="text-rose-300">Playing a card consumes it permanently.</b>
-        </li>
-        <li>
-          • <b className="text-emerald-300">Gold each round:</b>
-        </li>
-        <li className="pl-2">
-          – Win: <b className="text-emerald-300">+{goldWin}💰</b> · Tie: +{goldTie}💰 · Lose: +{goldLose}💰
-        </li>
-        <li>• Shop always has ≥1 unit. Refreshes 3× free/round.</li>
-        <li>
-          • Empty deck &amp; broke: receive {freeRescue}💰 rescue gold.
-        </li>
-      </ul>
+      <img
+        src="/images/how_it_works.png"
+        alt=""
+        aria-hidden
+        className="pointer-events-none absolute inset-0 h-full w-full select-none object-fill"
+        draggable={false}
+      />
+
+      <div
+        className="absolute z-10 overflow-hidden"
+        style={{ left: "14%", right: "8%", top: "14%", bottom: "10%" }}
+      >
+        <h3
+          className="font-display mb-2 text-center text-[10px] font-bold uppercase tracking-[0.18em] text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]"
+          style={{ fontFamily: "Cinzel, Georgia, serif" }}
+        >
+          How It Works
+        </h3>
+        <ul
+          className="space-y-1 text-[9px] leading-snug text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]"
+          style={{ fontFamily: "Cinzel, Georgia, serif" }}
+        >
+          <li>
+            • <b className="font-bold text-white">Main Deck</b>: shared pool, face-down until bought.
+          </li>
+          <li>
+            • <b className="font-bold text-white">Your Deck</b>: personal cards. Max {maxDeck}.
+          </li>
+          <li>
+            • <b className="font-bold text-white">Gold each round 💰:</b>
+          </li>
+          <li className="pl-2">
+            Win: <b className="font-bold text-white">+{goldWin}</b> · Tie: +{goldTie} · Lose: +{goldLose}
+          </li>
+          <li>• Empty deck &amp; broke: receive {freeRescue}💰 rescue gold.</li>
+        </ul>
+      </div>
     </div>
   );
 }
