@@ -1,4 +1,4 @@
-import { UI_ASPECT } from "../../utils/layoutTokens";
+import { AbsoluteFrame } from "../layout/AbsoluteFrame";
 
 type HowItWorksPanelProps = {
   maxDeck: number;
@@ -18,30 +18,24 @@ export function HowItWorksPanel({
   className = "",
 }: HowItWorksPanelProps) {
   return (
-    <div
-      className={`relative h-full shrink-0 ${className}`}
-      style={{ aspectRatio: UI_ASPECT.howItWorks }}
+    <AbsoluteFrame
+      image="/images/how_it_works.png"
+      className={className}
+      style={{ width: "var(--hiw-w)", height: "var(--hiw-h)" }}
+      contentClassName="overflow-hidden"
     >
-      <img
-        src="/images/how_it_works.png"
-        alt=""
-        aria-hidden
-        className="pointer-events-none absolute inset-0 h-full w-full select-none object-fill"
-        draggable={false}
-      />
-
       <div
-        className="absolute z-10 overflow-hidden"
-        style={{ left: "14%", right: "8%", top: "14%", bottom: "10%" }}
+        className="absolute overflow-hidden"
+        style={{ left: "11%", right: "9%", top: "16%", bottom: "7%" }}
       >
         <h3
-          className="font-display mb-2 text-center text-[10px] font-bold uppercase tracking-[0.18em] text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]"
+          className="font-display mb-[0.55em] text-center text-[0.82em] font-bold uppercase tracking-[0.14em] text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]"
           style={{ fontFamily: "Cinzel, Georgia, serif" }}
         >
           How It Works
         </h3>
         <ul
-          className="space-y-1 text-[9px] leading-snug text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]"
+          className="space-y-[0.4em] text-[0.74em] leading-snug text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]"
           style={{ fontFamily: "Cinzel, Georgia, serif" }}
         >
           <li>
@@ -53,12 +47,12 @@ export function HowItWorksPanel({
           <li>
             • <b className="font-bold text-white">Gold each round 💰:</b>
           </li>
-          <li className="pl-2">
+          <li className="pl-[0.45em]">
             Win: <b className="font-bold text-white">+{goldWin}</b> · Tie: +{goldTie} · Lose: +{goldLose}
           </li>
           <li>• Empty deck &amp; broke: receive {freeRescue}💰 rescue gold.</li>
         </ul>
       </div>
-    </div>
+    </AbsoluteFrame>
   );
 }

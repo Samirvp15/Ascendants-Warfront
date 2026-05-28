@@ -1,4 +1,5 @@
 import { cn } from "../../utils/cn";
+import { AbsoluteFrame } from "../layout/AbsoluteFrame";
 
 type EnemyStripProps = {
   enemyMana: number;
@@ -24,54 +25,69 @@ export function EnemyStrip({
   className = "",
 }: EnemyStripProps) {
   return (
-    <div
+    <AbsoluteFrame
+      image="/images/enemy_strip.png"
       className={cn(
-        "relative w-full shrink-0 transition-all duration-700",
+        "left-1/2 top-0 z-30 w-[var(--enemy-w)] -translate-x-1/2 transition-all duration-700",
         activeTurn && "ring-1 ring-rose-400/40",
         className
       )}
+      bgStyle={{ top: "-4%", bottom: "-10%", height: "auto" }}
+      contentClassName="grid grid-cols-[10%_1fr_13%] grid-rows-[48%_52%] px-[2.8%] pb-[8.5%] pt-[5.5%]"
     >
-      <img
-        src="/images/enemy_strip.png"
-        alt=""
-        aria-hidden
-        className="pointer-events-none absolute inset-0 h-full w-full select-none object-fill"
-        draggable={false}
-      />
-
-      <div
-        className="absolute z-10 flex flex-col items-center justify-center"
-        style={{ left: "1.2%", top: "50%", width: "10.5%", height: "88%", transform: "translateY(-50%)" }}
-      >
-        <span className="text-xl leading-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">👹</span>
+      <div className="row-span-2 flex items-center justify-center">
+        <span className="text-[0.95em] leading-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">👹</span>
       </div>
 
-      <div className="absolute z-10" style={{ left: "12.5%", top: "22%" }}>
-        <span className="font-display text-[10px] font-bold text-rose-100 drop-shadow-[0_1px_4px_rgba(0,0,0,1)]">
+      <div className="flex items-start self-start pl-[0.5%] pt-[2%]">
+        <span className="font-display text-[0.62em] font-bold leading-tight text-rose-100 drop-shadow-[0_1px_4px_rgba(0,0,0,1)]">
           Enemy
         </span>
-        <span className="ml-1.5 text-[9px] text-slate-300 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
-          · {enemyDeckCount} cards
+        <span className="ml-[0.35em] text-[0.56em] leading-tight text-slate-300 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
+          · {enemyDeckCount}
         </span>
       </div>
 
-      <div
-        className={cn("absolute z-20 tabular-nums", flashMana && "animate-pulse")}
-        style={{ left: "6.5%", bottom: "18%" }}
-      >
-        <span className="text-[10px] font-bold text-blue-100 drop-shadow-[0_1px_4px_rgba(0,0,0,1)]">
+      <div className="flex items-start justify-between px-[6%] pt-[10%]">
+        <span
+          className={cn(
+            "tabular-nums text-[0.58em] font-bold leading-none text-blue-100 drop-shadow-[0_1px_4px_rgba(0,0,0,1)]",
+            flashMana && "animate-pulse"
+          )}
+        >
+          {enemyMana}
+        </span>
+        <span
+          className={cn(
+            "tabular-nums text-[0.58em] font-bold leading-none text-red-100 drop-shadow-[0_1px_4px_rgba(0,0,0,1)]",
+            flashNexus && "animate-pulse"
+          )}
+        >
+          {displayEnemyNexus}
+        </span>
+      </div>
+
+      <div className="flex items-end pb-[4%] pl-[0.5%]">
+        <span
+          className={cn(
+            "tabular-nums text-[0.62em] font-bold leading-none text-blue-100 drop-shadow-[0_1px_4px_rgba(0,0,0,1)]",
+            flashMana && "animate-pulse"
+          )}
+        >
           ◆ {enemyMana}/{enemyMaxMana}
         </span>
       </div>
 
-      <div
-        className={cn("absolute z-20 tabular-nums", flashNexus && "animate-pulse")}
-        style={{ right: "6.5%", bottom: "18%" }}
-      >
-        <span className="text-[10px] font-bold text-red-100 drop-shadow-[0_1px_4px_rgba(0,0,0,1)]">
+      <div className="flex items-end justify-end pb-[4%] pr-[3%]">
+        <span
+          className={cn(
+            "tabular-nums text-[0.62em] font-bold leading-none text-red-100 drop-shadow-[0_1px_4px_rgba(0,0,0,1)]",
+            flashNexus && "animate-pulse"
+          )}
+        >
           ♥ {displayEnemyNexus}/{nexusMax}
         </span>
       </div>
-    </div>
+    </AbsoluteFrame>
   );
 }

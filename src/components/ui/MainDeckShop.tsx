@@ -1,3 +1,4 @@
+import { AbsoluteFrame } from "../layout/AbsoluteFrame";
 import { ShopBackCard } from "./ShopBackCard";
 
 type MainDeckShopProps<T extends { uid: string; def: { price: number; type: string } }> = {
@@ -24,27 +25,22 @@ export function MainDeckShop<T extends { uid: string; def: { price: number; type
   className = "",
 }: MainDeckShopProps<T>) {
   return (
-    <div className={`relative h-full w-full min-h-0 ${className}`}>
-      <img
-        src="/images/main_deck.png"
-        alt=""
-        aria-hidden
-        className="pointer-events-none absolute inset-0 h-full w-full select-none object-fill"
-        draggable={false}
-      />
-
-      <div
-        className="absolute z-10 text-center"
-        style={{ left: "8%", right: "8%", top: "3%" }}
-      >
-        <h3 className="font-display text-xs font-bold tracking-wider text-amber-100 drop-shadow-md">
+    <AbsoluteFrame
+      image="/images/main_deck.png"
+      className={`inset-0 z-10 ${className}`}
+      bgStyle={{ left: "-4%", right: 0, top: "-2%", bottom: 0 }}
+    >
+      <div className="absolute text-center" style={{ left: "8%", right: "8%", top: "3%" }}>
+        <h3 className="font-display text-[0.85em] font-bold tracking-wider text-amber-100 drop-shadow-md">
           Main Deck
         </h3>
-        <p className="mt-0.5 text-[9px] text-slate-300 drop-shadow-md">{mainDeckRemaining} cards in pool</p>
+        <p className="mt-[0.25em] text-[0.72em] text-slate-300 drop-shadow-md">
+          {mainDeckRemaining} cards in pool
+        </p>
       </div>
 
       <div
-        className="absolute z-10 flex flex-col gap-1.5 overflow-hidden"
+        className="absolute flex flex-col gap-[0.35em] overflow-hidden"
         style={{ left: "10%", right: "10%", top: "12%", bottom: "16%" }}
       >
         {shopEntries.map((entry) => (
@@ -58,22 +54,22 @@ export function MainDeckShop<T extends { uid: string; def: { price: number; type
           />
         ))}
         {shopEntries.length === 0 && (
-          <div className="flex flex-1 items-center justify-center text-center text-[10px] text-slate-400">
+          <div className="flex flex-1 items-center justify-center text-center text-[0.75em] text-slate-400">
             Main deck exhausted!
           </div>
         )}
       </div>
 
-      <div className="absolute z-10" style={{ left: "10%", right: "10%", bottom: "4%" }}>
+      <div className="absolute" style={{ left: "10%", right: "10%", bottom: "4%" }}>
         <button
           type="button"
           onClick={onRefresh}
           disabled={refreshes <= 0 || winner}
-          className="stone-btn w-full py-1.5 text-[9px] text-indigo-200 disabled:opacity-40"
+          className="stone-btn w-full py-[0.45em] text-[0.72em] text-indigo-200 disabled:opacity-40"
         >
           ↻ Refresh ({refreshes})
         </button>
       </div>
-    </div>
+    </AbsoluteFrame>
   );
 }

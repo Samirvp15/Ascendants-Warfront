@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "../../utils/cn";
+import { AbsoluteFrame } from "../layout/AbsoluteFrame";
 import { StrikeButton } from "./StrikeButton";
 
 type PlayerHandDeckProps = {
@@ -35,66 +36,64 @@ export function PlayerHandDeck({
   className = "",
   children,
 }: PlayerHandDeckProps) {
-  return (
-    <div className={cn("relative w-full shrink-0", className)}>
-      <img
-        src="/images/hand_deck_player.png"
-        alt=""
-        aria-hidden
-        className="pointer-events-none absolute inset-0 h-full w-full select-none object-fill"
-        draggable={false}
-      />
+  const showStatus = selectedCardName || isMoving || deckEmpty || deckCount <= 2;
 
+  return (
+    <AbsoluteFrame
+      image="/images/hand_deck_player.png"
+      className={cn("bottom-0 left-1/2 z-30 w-[var(--hand-w)] -translate-x-1/2", className)}
+      bgStyle={{ top: "-8%", bottom: "-3%", height: "auto" }}
+    >
       <div
-        className={cn("absolute z-20 tabular-nums", flashMana && "animate-pulse")}
-        style={{ left: "7%", top: "9%" }}
+        className={cn("absolute tabular-nums", flashMana && "animate-pulse")}
+        style={{ left: "7.5%", top: "7%" }}
       >
-        <span className="text-[11px] font-bold text-blue-100 drop-shadow-[0_1px_4px_rgba(0,0,0,1)]">
+        <span className="text-[0.62em] font-bold leading-none text-blue-100 drop-shadow-[0_1px_4px_rgba(0,0,0,1)]">
           ◆ {playerMana}/{playerMaxMana}
         </span>
       </div>
 
       <div
-        className={cn("absolute z-20 tabular-nums", flashNexus && "animate-pulse")}
-        style={{ right: "7%", top: "9%" }}
+        className={cn("absolute tabular-nums", flashNexus && "animate-pulse")}
+        style={{ right: "7.5%", top: "7%" }}
       >
-        <span className="text-[11px] font-bold text-red-100 drop-shadow-[0_1px_4px_rgba(0,0,0,1)]">
+        <span className="text-[0.62em] font-bold leading-none text-red-100 drop-shadow-[0_1px_4px_rgba(0,0,0,1)]">
           ♥ {displayPlayerNexus}/{nexusMax}
         </span>
       </div>
 
-      {(selectedCardName || isMoving || deckEmpty || deckCount <= 2) && (
+      {showStatus && (
         <div
-          className="absolute z-20 flex -translate-x-1/2 flex-wrap items-center justify-center gap-1 px-2"
-          style={{ left: "50%", top: "8%" }}
+          className="absolute flex -translate-x-1/2 flex-wrap items-center justify-center gap-[0.2em] px-[2%]"
+          style={{ left: "50%", top: "6.5%" }}
         >
           {deckEmpty && (
-            <span className="text-[8px] font-semibold text-rose-200 drop-shadow-md">⚠ Deck empty</span>
+            <span className="text-[0.56em] font-semibold text-rose-200 drop-shadow-md">⚠ Deck empty</span>
           )}
           {!deckEmpty && deckCount <= 2 && (
-            <span className="text-[8px] font-semibold text-amber-200 drop-shadow-md">{deckCount} cards left</span>
+            <span className="text-[0.56em] font-semibold text-amber-200 drop-shadow-md">{deckCount} left</span>
           )}
           {selectedCardName && (
-            <span className="text-[8px] font-bold text-amber-100 drop-shadow-md animate-pulse">
+            <span className="text-[0.56em] font-bold text-amber-100 drop-shadow-md animate-pulse">
               {selectedCardName} → lane
             </span>
           )}
           {isMoving && !selectedCardName && (
-            <span className="text-[8px] font-bold text-sky-100 drop-shadow-md animate-pulse">Moving → lane</span>
+            <span className="text-[0.56em] font-bold text-sky-100 drop-shadow-md animate-pulse">Moving → lane</span>
           )}
         </div>
       )}
 
       <div
-        className="absolute z-10 flex items-end justify-center gap-1.5 overflow-x-auto overflow-y-hidden [scrollbar-width:thin]"
-        style={{ left: "10%", right: "18%", top: "30%", bottom: "14%" }}
+        className="absolute flex items-end justify-center gap-[0.28em] overflow-x-auto overflow-y-hidden [scrollbar-width:thin]"
+        style={{ left: "9%", right: "17%", top: "26%", bottom: "11%" }}
       >
         {children}
       </div>
 
-      <div className="absolute z-20" style={{ right: "2.5%", bottom: "6%" }}>
+      <div className="absolute" style={{ right: "2.2%", bottom: "5%" }}>
         <StrikeButton compact disabled={strikeDisabled} onClick={onStrike} />
       </div>
-    </div>
+    </AbsoluteFrame>
   );
 }

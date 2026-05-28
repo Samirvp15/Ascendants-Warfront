@@ -50,7 +50,7 @@ export function HandCard({
       }
       className={cn(
         "card-frame group relative shrink-0 flex-col overflow-hidden transition-all duration-300",
-        compact ? "flex h-[112px] w-[78px]" : "flex h-[108px] w-[76px]",
+        compact ? "flex h-[100px] w-[70px]" : "flex h-[108px] w-[76px]",
         selected && (compact ? "-translate-y-1 scale-105 border-amber-400 shadow-lg shadow-amber-400/40" : "-translate-y-2 scale-105 border-amber-400 shadow-lg shadow-amber-400/40"),
         clickable ? "cursor-pointer hover:-translate-y-1 hover:scale-[1.02]" : "cursor-not-allowed opacity-50",
         newlyBought && "animate-bounce"

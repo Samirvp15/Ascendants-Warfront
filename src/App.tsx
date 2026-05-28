@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { AbsoluteFrame, AbsoluteFrameAnchor } from "./components/layout/AbsoluteFrame";
 import { EnemyStrip } from "./components/ui/EnemyStrip";
 import { GameHeader } from "./components/ui/GameHeader";
 import { HandCard } from "./components/ui/HandCard";
@@ -747,7 +748,7 @@ export default function App() {
         backgroundAttachment: "fixed",
       }}
     >
-      <div className="flex h-full w-full flex-col">
+      <div className="absolute-frame-anchor flex h-full w-full flex-col overflow-visible">
         <GameHeader
           round={round}
           mainDeckRemaining={mainDeck.length + shopEntries.length}
@@ -766,25 +767,31 @@ export default function App() {
           className="grid min-h-0 flex-1"
           style={{ gridTemplateColumns: "1fr var(--shop-w)" }}
         >
-          {/* Battlefield — arena centered in play area */}
-          <div className="relative flex h-[var(--main-h)] min-h-0 items-stretch justify-center">
-            <div
-              className="flex h-full min-h-0 flex-col"
+          {/* Battlefield — absolute overlapping layers */}
+          <div className="relative flex h-[var(--main-h)] min-h-0 items-stretch justify-center overflow-visible">
+            <AbsoluteFrameAnchor
+              className="h-full overflow-visible"
               style={{ width: "var(--arena-w)" }}
             >
-            <EnemyStrip
-              className="h-[var(--enemy-h)] shrink-0"
-              enemyMana={enemyMana}
-              enemyMaxMana={enemyMaxMana}
-              displayEnemyNexus={displayEnemyNexus}
-              nexusMax={STARTING_NEXUS}
-              enemyDeckCount={enemyDeck.length}
-              flashMana={flashMana === "enemy"}
-              flashNexus={flashNexus === "enemy"}
-              activeTurn={currentTurn === "enemy"}
-            />
+              <EnemyStrip
+                className="h-[var(--enemy-h)]"
+                enemyMana={enemyMana}
+                enemyMaxMana={enemyMaxMana}
+                displayEnemyNexus={displayEnemyNexus}
+                nexusMax={STARTING_NEXUS}
+                enemyDeckCount={enemyDeck.length}
+                flashMana={flashMana === "enemy"}
+                flashNexus={flashNexus === "enemy"}
+                activeTurn={currentTurn === "enemy"}
+              />
 
-            <div className="grid min-h-0 flex-1 grid-cols-3 gap-0.5">
+              <div
+                className="absolute left-0 right-0 z-20 grid grid-cols-3 gap-[0.3%]"
+                style={{
+                  top: "calc(var(--enemy-h) * 0.58)",
+                  bottom: "calc(var(--hand-h) * 0.58)",
+                }}
+              >
               {LANES.map((lane) => {
                 const e = enemyBoard[lane],
                   p = playerBoard[lane];
@@ -807,99 +814,107 @@ export default function App() {
                 };
 
                 return (
-                  <div
+                  <AbsoluteFrameAnchor
                     key={lane}
-                    onClick={handleLaneClick}
                     className={cn(
-                      "lane-frame relative flex h-full min-h-0 flex-col gap-0 p-1 transition-all duration-500",
+                      "h-full min-h-0 transition-all duration-500",
                       (validTarget || isMoveTarget) && "lane-frame-target cursor-pointer"
                     )}
+                    onClick={handleLaneClick}
                   >
-                    <img
-                      src="/images/main_deck.png"
-                      alt=""
-                      aria-hidden
-                      className="pointer-events-none absolute inset-0 h-full w-full select-none object-fill"
-                      draggable={false}
-                    />
+                    <AbsoluteFrame image="/images/main_deck.png" className="inset-0" />
 
-                    <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center">
-                      {e ? (
-                        <UnitCard
-                          cardId={e.cardId}
-                          name={e.name}
-                          atk={e.atk}
-                          hp={e.hp}
-                          side="enemy"
-                          showDmg={showDmg}
-                          dmg={eDmg}
-                          dying={combatStep === "deaths" && e.hp <= 0}
-                        />
-                      ) : (
-                        <EmptySlot
-                          label={
-                            validTarget && selectedCard?.type === "spell"
-                              ? "Cast here"
-                              : isMoveTarget
-                                ? "Move here"
-                                : "—"
-                          }
-                          active={Boolean(
-                            (validTarget && selectedCard?.type === "spell") || isMoveTarget
-                          )}
-                        />
-                      )}
-                    </div>
+                    <div
+                      className="absolute inset-0 z-20 flex min-h-0 flex-col"
+                      style={{
+                        paddingLeft: "var(--lane-inset-x)",
+                        paddingRight: "var(--lane-inset-x)",
+                        paddingTop: "var(--lane-inset-y)",
+                        paddingBottom: "var(--lane-inset-y)",
+                      }}
+                    >
+                      <div className="@container flex min-h-0 flex-1 items-stretch justify-center">
+                        {e ? (
+                          <UnitCard
+                            cardId={e.cardId}
+                            name={e.name}
+                            atk={e.atk}
+                            hp={e.hp}
+                            side="enemy"
+                            lane
+                            showDmg={showDmg}
+                            dmg={eDmg}
+                            dying={combatStep === "deaths" && e.hp <= 0}
+                          />
+                        ) : (
+                          <EmptySlot
+                            lane
+                            label={
+                              validTarget && selectedCard?.type === "spell"
+                                ? "Cast here"
+                                : isMoveTarget
+                                  ? "Move here"
+                                  : "—"
+                            }
+                            active={Boolean(
+                              (validTarget && selectedCard?.type === "spell") || isMoveTarget
+                            )}
+                          />
+                        )}
+                      </div>
 
-                    <div className="relative z-10 flex shrink-0 items-center py-0.5">
-                      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
-                      {p && e && (
-                        <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-amber-400">
-                          ⚔
-                        </span>
-                      )}
-                    </div>
+                      <div className="relative flex shrink-0 items-center py-[0.15%]">
+                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
+                        {p && e && (
+                          <span className="absolute inset-0 flex items-center justify-center text-[1em] font-bold text-amber-400">
+                            ⚔
+                          </span>
+                        )}
+                      </div>
 
-                    <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center">
-                      {p ? (
-                        <UnitCard
-                          cardId={p.cardId}
-                          name={p.name}
-                          atk={p.atk}
-                          hp={p.hp}
-                          side="player"
-                          showDmg={showDmg}
-                          dmg={pDmg}
-                          dying={combatStep === "deaths" && p.hp <= 0}
-                          selected={Boolean(isMoveSource)}
-                          moving={Boolean(isMoveSource)}
-                          onClick={(ev) => {
-                            ev.stopPropagation();
-                            selectUnitForMove(p.id);
-                          }}
-                        />
-                      ) : (
-                        <EmptySlot
-                          label={
-                            validTarget && selectedCard?.type === "unit"
-                              ? "Deploy here"
-                              : isMoveTarget
-                                ? "Move here"
-                                : "—"
-                          }
-                          active={Boolean(
-                            (validTarget && selectedCard?.type === "unit") || isMoveTarget
-                          )}
-                        />
-                      )}
+                      <div className="@container flex min-h-0 flex-1 items-stretch justify-center">
+                        {p ? (
+                          <UnitCard
+                            cardId={p.cardId}
+                            name={p.name}
+                            atk={p.atk}
+                            hp={p.hp}
+                            side="player"
+                            lane
+                            showDmg={showDmg}
+                            dmg={pDmg}
+                            dying={combatStep === "deaths" && p.hp <= 0}
+                            selected={Boolean(isMoveSource)}
+                            moving={Boolean(isMoveSource)}
+                            onClick={(ev) => {
+                              ev.stopPropagation();
+                              selectUnitForMove(p.id);
+                            }}
+                          />
+                        ) : (
+                          <EmptySlot
+                            lane
+                            label={
+                              validTarget && selectedCard?.type === "unit"
+                                ? "Deploy here"
+                                : isMoveTarget
+                                  ? "Move here"
+                                  : "—"
+                            }
+                            active={Boolean(
+                              (validTarget && selectedCard?.type === "unit") || isMoveTarget
+                            )}
+                          />
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  </AbsoluteFrameAnchor>
                 );
               })}
               </div>
 
               <PlayerHandDeck
-                className="h-[var(--hand-h)] shrink-0"
+                className="h-[var(--hand-h)]"
                 playerMana={playerMana}
                 playerMaxMana={playerMaxMana}
                 displayPlayerNexus={displayPlayerNexus}
@@ -944,11 +959,11 @@ export default function App() {
                   );
                 })}
               </PlayerHandDeck>
-            </div>
+            </AbsoluteFrameAnchor>
           </div>
 
-          {/* Main Deck shop — compact right column */}
-          <div className="relative h-[var(--main-h)] min-h-0">
+          {/* Main Deck shop — absolute frame, may overlap left */}
+          <AbsoluteFrameAnchor className="h-[var(--main-h)] min-h-0 overflow-visible">
             <MainDeckShop<ShopEntry>
               shopEntries={shopEntries}
               mainDeckRemaining={mainDeck.length + shopEntries.length}
@@ -958,9 +973,9 @@ export default function App() {
               winner={!!winner}
               onRefresh={refreshShop}
               onBuy={buyFromShop}
-              className="h-full"
+              className="h-full w-full"
             />
-          </div>
+          </AbsoluteFrameAnchor>
         </div>
 
         {toast && (

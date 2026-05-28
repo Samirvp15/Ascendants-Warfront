@@ -42,9 +42,25 @@ body {
   --shop-w: min(20vw, 260px, calc(var(--main-h) * 379 / 658));
   --play-w: calc(100vw - var(--shop-w));
   --arena-w: min(calc(var(--play-w) * 0.78), 860px);
-  --enemy-h: min(calc(var(--arena-w) * 322 / 774), calc(var(--main-h) * 0.2));
-  --hand-h: min(calc(var(--arena-w) * 380 / 657), calc(var(--main-h) * 0.26));
-  --hiw-w: calc(var(--header-h) * 447 / 558);
+  --hiw-scale: 1.55;
+  --hiw-w: calc(var(--header-h) * 447 / 558 * var(--hiw-scale));
+  --hiw-h: calc(var(--header-h) * 1.42);
+  --logo-h: calc(var(--header-h) * 1.22);
+  --enemy-w: calc(var(--arena-w) * 0.76);
+  --enemy-h: min(calc(var(--enemy-w) * 322 / 774 * 0.9), calc(var(--main-h) * 0.115));
+  --hand-w: calc(var(--arena-w) * 0.76);
+  --hand-h: min(calc(var(--hand-w) * 380 / 657 * 0.9), calc(var(--main-h) * 0.22));
+  --lane-inset-x: 2.5%;
+  --lane-inset-y: 1.75%;
+}
+
+/* Absolute PNG frame layers — overlap-friendly */
+.absolute-frame {
+  position: absolute;
+}
+
+.absolute-frame-anchor {
+  position: relative;
 }
 
 .font-display {
@@ -176,12 +192,12 @@ body {
 
 .header-btn {
   font-family: Cinzel, Georgia, serif;
-  background: transparent url("/images/header_button.png") center / 100% 100% no-repeat;
+  background: transparent url("/images/header_button.png") center / 88% 88% no-repeat;
   border: none;
-  min-width: 9.5rem;
-  min-height: 3.25rem;
-  padding: 0.6rem 1.75rem;
-  font-size: 0.78rem;
+  min-width: 6.75rem;
+  min-height: 2.15rem;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
