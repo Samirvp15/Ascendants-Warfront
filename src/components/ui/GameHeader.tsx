@@ -1,6 +1,8 @@
-import { HeaderBadge, HeaderButton } from "./HeaderButton";
+import { HeaderButton } from "./HeaderButton";
+import { GoldIcon } from "./GoldIcon";
 import { HowItWorksPanel } from "./HowItWorksPanel";
 import { AbsoluteFrameAnchor } from "../layout/AbsoluteFrame";
+import { cn } from "../../utils/cn";
 
 type GameSidebarProps = {
   round: number;
@@ -66,16 +68,18 @@ type GameControlsProps = {
 export function GameControls({ displayGold, flashGold, onNewMatch, onReset }: GameControlsProps) {
   return (
     <div className="absolute-frame-anchor z-40 flex shrink-0 flex-wrap items-center justify-end gap-[0.35em] p-2">
-      <HeaderBadge
-        variant="gold"
-        className={flashGold !== null ? "header-btn-gold-flash transition-transform duration-500" : ""}
-      >
-        <span className={flashGold !== null ? "animate-bounce" : ""}>💰</span>
-        <span className="ml-1 tabular-nums">{displayGold}</span>
-        {flashGold !== null && (
-          <span className="ml-1 animate-pulse text-amber-200">+{flashGold}</span>
+      <span
+        className={cn(
+          "gold-amount-badge header-gold-badge pointer-events-none transition-transform duration-500",
+          flashGold !== null && "header-gold-badge-flash"
         )}
-      </HeaderBadge>
+      >
+        <span className="gold-amount-badge__value tabular-nums">{displayGold}</span>
+        {flashGold !== null && (
+          <span className="gold-amount-badge__bonus animate-pulse tabular-nums">+{flashGold}</span>
+        )}
+        <GoldIcon size="sm" className="gold-amount-badge__icon" />
+      </span>
       <HeaderButton onClick={onNewMatch}>New Match</HeaderButton>
       <HeaderButton onClick={onReset}>Reset All</HeaderButton>
     </div>

@@ -1,4 +1,5 @@
 import { AbsoluteFrame } from "../layout/AbsoluteFrame";
+import { GoldIcon } from "./GoldIcon";
 
 type HowItWorksPanelProps = {
   maxDeck: number;
@@ -44,13 +45,20 @@ export function HowItWorksPanel({
           <li>
             • <b className="font-bold text-white">Your Deck</b>: personal cards. Max {maxDeck}.
           </li>
-          <li>
-            • <b className="font-bold text-white">Gold each round 💰:</b>
+          <li className="flex items-center gap-[0.35em]">
+            <span>•</span>
+            <b className="font-bold text-white">Gold each round</b>
+            <GoldIcon size="xs" className="translate-y-[-0.05em]" />
+            <span>:</span>
           </li>
           <li className="pl-[0.45em]">
             Win: <b className="font-bold text-white">+{goldWin}</b> · Tie: +{goldTie} · Lose: +{goldLose}
           </li>
-          <li>• Empty deck &amp; broke: receive {freeRescue}💰 rescue gold.</li>
+          <li className="flex items-center gap-[0.35em]">
+            <span>• Empty deck &amp; broke: receive {freeRescue}</span>
+            <GoldIcon size="xs" />
+            <span>rescue gold.</span>
+          </li>
         </ul>
       </div>
     </AbsoluteFrame>

@@ -28,21 +28,18 @@ export function MainDeckShop<T extends { uid: string; def: { price: number; type
     <AbsoluteFrame
       image="/images/main_deck.png"
       className={`inset-0 z-10 ${className}`}
-      bgStyle={{ left: "-4%", right: 0, top: "-2%", bottom: 0 }}
+      contentClassName="main-deck-content"
     >
-      <div className="absolute text-center" style={{ left: "8%", right: "8%", top: "3%" }}>
-        <h3 className="font-display text-[0.85em] font-bold tracking-wider text-amber-100 drop-shadow-md">
+      <header className="main-deck-header">
+        <h3 className="font-display text-[0.85em] font-bold tracking-wider text-amber-300 drop-shadow-md">
           Main Deck
         </h3>
-        <p className="mt-[0.25em] text-[0.72em] text-slate-300 drop-shadow-md">
+        <p className="font-display mt-[0.25em] text-[0.72em] text-amber-100 drop-shadow-md">
           {mainDeckRemaining} cards in pool
         </p>
-      </div>
+      </header>
 
-      <div
-        className="absolute flex flex-col gap-[0.35em] overflow-hidden"
-        style={{ left: "10%", right: "10%", top: "12%", bottom: "16%" }}
-      >
+      <div className="main-deck-grid">
         {shopEntries.map((entry) => (
           <ShopBackCard
             key={entry.uid}
@@ -54,21 +51,21 @@ export function MainDeckShop<T extends { uid: string; def: { price: number; type
           />
         ))}
         {shopEntries.length === 0 && (
-          <div className="flex flex-1 items-center justify-center text-center text-[0.75em] text-slate-400">
+          <div className="main-deck-grid__empty col-span-2 row-span-2 flex items-center justify-center text-center text-[0.75em] text-slate-400">
             Main deck exhausted!
           </div>
         )}
       </div>
 
-      <div className="absolute" style={{ left: "10%", right: "10%", bottom: "4%" }}>
+      <div className="main-deck-refresh">
         <button
           type="button"
           onClick={onRefresh}
           disabled={refreshes <= 0 || winner}
-          className="stone-btn w-full py-[0.45em] text-[0.72em] text-indigo-200 disabled:opacity-40"
-        >
-          ↻ Refresh ({refreshes})
-        </button>
+          title={`Refresh shop (${refreshes} left)`}
+          aria-label={`Refresh shop, ${refreshes} remaining`}
+          className="shop-refresh-btn shrink-0"
+        />
       </div>
     </AbsoluteFrame>
   );

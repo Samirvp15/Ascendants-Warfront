@@ -80,6 +80,7 @@ const SHOP_SIZE = 4;
 const STARTING_NEXUS = 20;
 const MAX_MANA = 10;
 const STARTING_GOLD = 8;
+const STARTER_DECK_IDS = ["scout", "acolyte", "soldier", "guardian"] as const;
 
 // Gold economy — tuned so you're never stuck
 const GOLD = {
@@ -105,6 +106,35 @@ function guaranteeUnit(entries: ShopEntry[]): ShopEntry[] {
   return clone;
 }
 
+function computeShopAfterPurchase(
+  shop: ShopEntry[],
+  main: CardDef[],
+  boughtUid: string,
+  ensureUnit = false
+): { nextShop: ShopEntry[]; nextMain: CardDef[] } {
+  const filtered = shop.filter(e => e.uid !== boughtUid);
+  if (main.length === 0) {
+    return { nextShop: filtered, nextMain: main };
+  }
+  const [drawn, ...nextMain] = main;
+  let nextShop: ShopEntry[] = [...filtered, { uid: uid(), def: drawn }];
+  if (ensureUnit) nextShop = guaranteeUnit(nextShop);
+  return { nextShop, nextMain };
+}
+
+function computeShopRefill(
+  shop: ShopEntry[],
+  main: CardDef[]
+): { nextShop: ShopEntry[]; nextMain: CardDef[] } {
+  const combined = shuffle([...main, ...shop.map(e => e.def)]);
+  const newShop: ShopEntry[] = [];
+  const remaining = [...combined];
+  for (let i = 0; i < SHOP_SIZE && remaining.length > 0; i++) {
+    newShop.push({ uid: uid(), def: remaining.shift()! });
+  }
+  return { nextShop: guaranteeUnit(newShop), nextMain: remaining };
+}
+
 const T = {
   CLASH_SHOW: 1400,
   DEATHS_SHOW: 1000,
@@ -116,6 +146,10 @@ const T = {
 // ---------- HELPERS ----------
 const uid = () => Math.random().toString(36).slice(2, 10);
 const makeCard = (def: CardDef): Card => ({ ...def, uid: `${def.id}-${uid()}` });
+
+function buildStarterDeck(): Card[] {
+  return STARTER_DECK_IDS.map(id => CARD_LIBRARY.find(c => c.id === id)!).map(makeCard);
+}
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -152,11 +186,7 @@ function usePersistent<T>(key: string, initial: T): [T, (v: T | ((p: T) => T)) =
 export default function App() {
   // === PERSISTENT: gold + personal deck ===
   const [gold, setGold] = usePersistent<number>("lc_gold", STARTING_GOLD);
-  // Player's deck: Card instances (with uids so we can remove on play)
-  const defaultDeck: Card[] = ["scout", "acolyte", "soldier", "guardian", "mend", "fireball"]
-    .map(id => CARD_LIBRARY.find(c => c.id === id)!)
-    .map(makeCard);
-  const [deckCards, setDeckCards] = usePersistent<Card[]>("lc_deck_v2", defaultDeck);
+  const [deckCards, setDeckCards] = usePersistent<Card[]>("lc_deck_v2", buildStarterDeck());
 
   // === MAIN DECK (shared pool) — resets each match ===
   const [mainDeck, setMainDeck] = useState<CardDef[]>(() => buildMainDeck());
@@ -204,6 +234,31 @@ export default function App() {
   const [toast, setToast] = useState<string | null>(null);
   const [newlyBoughtUid, setNewlyBoughtUid] = useState<string | null>(null); // for reveal animation
   const toastTimer = useRef<number | null>(null);
+  const shopEntriesRef = useRef(shopEntries);
+  const mainDeckRef = useRef(mainDeck);
+  shopEntriesRef.current = shopEntries;
+  mainDeckRef.current = mainDeck;
+
+  function applyShopPurchase(boughtUid: string, ensureUnit = false) {
+    const { nextShop, nextMain } = computeShopAfterPurchase(
+      shopEntriesRef.current,
+      mainDeckRef.current,
+      boughtUid,
+      ensureUnit
+    );
+    shopEntriesRef.current = nextShop;
+    mainDeckRef.current = nextMain;
+    setShopEntries(nextShop);
+    setMainDeck(nextMain);
+  }
+
+  function applyShopRefill() {
+    const { nextShop, nextMain } = computeShopRefill(shopEntriesRef.current, mainDeckRef.current);
+    shopEntriesRef.current = nextShop;
+    mainDeckRef.current = nextMain;
+    setShopEntries(nextShop);
+    setMainDeck(nextMain);
+  }
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -223,8 +278,11 @@ export default function App() {
       const def = remaining.shift()!;
       initialShop.push({ uid: uid(), def });
     }
-    setShopEntries(guaranteeUnit(initialShop));
+    const nextShop = guaranteeUnit(initialShop);
+    setShopEntries(nextShop);
     setMainDeck(remaining);
+    shopEntriesRef.current = nextShop;
+    mainDeckRef.current = remaining;
 
     // Reset enemy deck
     const pool = CARD_LIBRARY.slice(0, Math.min(CARD_LIBRARY.length, 6));
@@ -384,18 +442,7 @@ export default function App() {
     setGold(g => g - entry.def.price);
     const newCard = makeCard(entry.def);
     setDeckCards(d => [...d, newCard]);
-    // Remove this entry from shop and draw a replacement from main deck
-    setShopEntries(s => {
-      const filtered = s.filter(e => e.uid !== entry.uid);
-      return filtered;
-    });
-    // Draw replacement from main deck
-    setMainDeck(md => {
-      if (md.length === 0) return md;
-      const [drawn, ...rest] = md;
-      setShopEntries(s => [...s, { uid: uid(), def: drawn }]);
-      return rest;
-    });
+    applyShopPurchase(entry.uid);
     setNewlyBoughtUid(newCard.uid);
     setTimeout(() => setNewlyBoughtUid(null), 1500);
     showToast(`Bought ${entry.def.name}!`);
@@ -406,21 +453,7 @@ export default function App() {
   function refreshShop() {
     if (refreshes <= 0) { showToast("No refreshes left"); return; }
     setRefreshes(r => r - 1);
-    // Put current shop cards back into main deck, draw new ones
-    setShopEntries(current => {
-      const returned = current.map(e => e.def);
-      setMainDeck(md => {
-        const combined = shuffle([...md, ...returned]);
-        const newShop: ShopEntry[] = [];
-        const remaining = [...combined];
-        for (let i = 0; i < SHOP_SIZE && remaining.length > 0; i++) {
-          newShop.push({ uid: uid(), def: remaining.shift()! });
-        }
-        setShopEntries(guaranteeUnit(newShop));
-        return remaining;
-      });
-      return [];
-    });
+    applyShopRefill();
     showToast("Shop refreshed");
   }
 
@@ -469,7 +502,7 @@ export default function App() {
     const enemyUnitsInHand = eDeck.filter(c => c.type === "unit").length;
     if (eDeck.length <= 2 || (enemyUnitsInHand === 0 && eGold >= 4)) {
       // Look at current shop entries (Main Deck)
-      const affordable = shopEntries.filter(entry => eGold >= entry.def.price);
+      const affordable = shopEntriesRef.current.filter(entry => eGold >= entry.def.price);
       if (affordable.length > 0) {
         // Prefer units if they have none, otherwise pick highest price (best card)
         let picked = affordable[0];
@@ -483,15 +516,8 @@ export default function App() {
         eGold -= picked.def.price;
         const newCard = makeCard(picked.def);
         eDeck.push(newCard);
-        
-        // Remove from shop and draw replacement (same as player)
-        setShopEntries(s => s.filter(e => e.uid !== picked.uid));
-        setMainDeck(md => {
-          if (md.length === 0) return md;
-          const [drawn, ...rest] = md;
-          setShopEntries(s => guaranteeUnit([...s, { uid: uid(), def: drawn }]));
-          return rest;
-        });
+
+        applyShopPurchase(picked.uid, true);
         
         // Visual feedback for enemy buying (just a toast for now)
         showToast("👹 Enemy bought a mystery card!");
@@ -703,21 +729,7 @@ export default function App() {
       });
 
       // Refresh shop for the new turn
-      setShopEntries(current => {
-        // Return any unsold entries and draw new ones
-        setMainDeck(md => {
-          const returned = current.map(e => e.def);
-          const combined = shuffle([...md, ...returned]);
-          const newShop: ShopEntry[] = [];
-          const remaining = [...combined];
-          for (let i = 0; i < SHOP_SIZE && remaining.length > 0; i++) {
-            newShop.push({ uid: uid(), def: remaining.shift()! });
-          }
-          setShopEntries(guaranteeUnit(newShop));
-          return remaining;
-        });
-        return [];
-      });
+      applyShopRefill();
       setRefreshes(3);
       setRound(r => r + 1);
       setCurrentTurn("player");
@@ -731,12 +743,31 @@ export default function App() {
   }, [combatStep]);
 
   function resetProgress(silent = false) {
-    if (!silent && !confirm("Reset everything?")) return;
+    if (!silent && !confirm("Reset everything? Gold, deck, and match progress will restart from zero.")) return;
+
+    if (toastTimer.current) {
+      clearTimeout(toastTimer.current);
+      toastTimer.current = null;
+    }
+
+    const starterDeck = buildStarterDeck();
     setGold(STARTING_GOLD);
-    setDeckCards(["scout", "acolyte", "soldier", "guardian", "mend", "fireball"]
-      .map(id => CARD_LIBRARY.find(c => c.id === id)!)
-      .map(makeCard));
-    setTimeout(() => initMatch(), 50);
+    setDeckCards(starterDeck);
+    setDisplayGold(STARTING_GOLD);
+    setWinner(null);
+    setBusy(false);
+    setSelectedCardUid(null);
+    setMovingUnitId(null);
+    setFlashNexus(null);
+    setFlashGold(null);
+    setFlashMana(null);
+    setToast(null);
+    setNewlyBoughtUid(null);
+    setRoundResult(null);
+    setCombatData(null);
+    setCombatStep("idle");
+    setRefreshes(3);
+    initMatch();
   }
 
   return (
@@ -909,13 +940,11 @@ export default function App() {
             </div>
           </div>
 
-          <div
-            className="relative shrink-0"
-            style={{ width: "var(--hand-w)", height: "var(--hand-h)" }}
-          >
-            <PlayerHandDeck
-              embedded
-              playerMana={playerMana}
+          <div className="hand-deck-zone">
+            <div className="hand-deck-zone__deck">
+              <PlayerHandDeck
+                embedded
+                playerMana={playerMana}
                 playerMaxMana={playerMaxMana}
                 displayPlayerNexus={displayPlayerNexus}
                 nexusMax={STARTING_NEXUS}
@@ -927,8 +956,8 @@ export default function App() {
                 isMoving={movingUnitId !== null && !selectedCard}
               >
                 {deckCards.length === 0 && (
-                  <div className="flex w-full items-center justify-center px-2 py-1 text-center text-[9px] text-rose-200 drop-shadow-md">
-                    ⚠️ Deck empty! Buy from Main Deck →
+                  <div className="font-display flex w-full items-center justify-center px-2 py-1 text-center text-[9px] text-rose-200 drop-shadow-md">
+                    Deck empty! Buy from Main Deck →
                   </div>
                 )}
                 {deckCards.map((c) => {
@@ -956,19 +985,26 @@ export default function App() {
                     />
                   );
                 })}
-            </PlayerHandDeck>
+              </PlayerHandDeck>
+            </div>
+            <div className="hand-strike-btn">
+              <StrikeButton
+                disabled={phase !== "playerTurn" || busy || !!winner}
+                onClick={endTurn}
+              />
+            </div>
           </div>
         </main>
 
         {/* Right column — controls + main deck shop */}
-        <div className="flex h-full min-h-0 flex-col overflow-visible">
+        <div className="shop-column flex h-full min-h-0 flex-col items-center overflow-visible">
           <GameControls
             displayGold={displayGold}
             flashGold={flashGold}
             onNewMatch={initMatch}
             onReset={() => resetProgress()}
           />
-          <AbsoluteFrameAnchor className="min-h-0 flex-1 overflow-visible">
+          <AbsoluteFrameAnchor className="main-deck-panel">
             <MainDeckShop<ShopEntry>
               shopEntries={shopEntries}
               mainDeckRemaining={mainDeck.length + shopEntries.length}
@@ -981,12 +1017,6 @@ export default function App() {
               className="h-full w-full"
             />
           </AbsoluteFrameAnchor>
-          <div className="strike-section flex shrink-0 items-center justify-center py-3">
-            <StrikeButton
-              disabled={phase !== "playerTurn" || busy || !!winner}
-              onClick={endTurn}
-            />
-          </div>
         </div>
       </div>
 
