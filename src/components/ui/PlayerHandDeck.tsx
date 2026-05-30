@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "../../utils/cn";
 import { AbsoluteFrame } from "../layout/AbsoluteFrame";
-import { StrikeButton } from "./StrikeButton";
 
 type PlayerHandDeckProps = {
   playerMana: number;
@@ -14,13 +13,10 @@ type PlayerHandDeckProps = {
   deckEmpty: boolean;
   selectedCardName: string | null;
   isMoving: boolean;
-  strikeDisabled: boolean;
-  onStrike: () => void;
   className?: string;
   embedded?: boolean;
   children: ReactNode;
 };
-
 export function PlayerHandDeck({
   playerMana,
   playerMaxMana,
@@ -32,13 +28,10 @@ export function PlayerHandDeck({
   deckEmpty,
   selectedCardName,
   isMoving,
-  strikeDisabled,
-  onStrike,
   className = "",
   embedded = false,
   children,
-}: PlayerHandDeckProps) {
-  const showStatus = selectedCardName || isMoving || deckEmpty || deckCount <= 2;
+}: PlayerHandDeckProps) {  const showStatus = selectedCardName || isMoving || deckEmpty || deckCount <= 2;
 
   return (
     <AbsoluteFrame
@@ -93,13 +86,9 @@ export function PlayerHandDeck({
 
       <div
         className="absolute flex items-end justify-center gap-[0.28em] overflow-x-auto overflow-y-hidden [scrollbar-width:thin]"
-        style={{ left: "9%", right: "17%", top: "26%", bottom: "11%" }}
+        style={{ left: "9%", right: "9%", top: "26%", bottom: "11%" }}
       >
         {children}
-      </div>
-
-      <div className="absolute" style={{ right: "2.2%", bottom: "5%" }}>
-        <StrikeButton compact disabled={strikeDisabled} onClick={onStrike} />
       </div>
     </AbsoluteFrame>
   );

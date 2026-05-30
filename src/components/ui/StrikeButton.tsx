@@ -13,9 +13,13 @@ export function StrikeButton({ disabled, compact = false, onClick }: StrikeButto
       onClick={onClick}
       disabled={disabled}
       title="End your turn and begin combat"
-      className={cn("strike-btn shrink-0", compact && "strike-btn-compact", !disabled && "strike-btn-active")}
+      className={cn(
+        "strike-btn shrink-0",
+        compact && "strike-btn-compact",
+        !disabled && "strike-btn-active"
+      )}
     >
-      STRIKE
+      <span className="strike-btn__label">STRIKE</span>
     </button>
   );
 }
