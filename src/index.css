@@ -49,18 +49,18 @@ body {
   --hiw-h: calc(var(--hiw-w) * 558 / 447);
   --enemy-w: calc(var(--arena-w) * 0.76);
   --enemy-h: min(calc(var(--enemy-w) * 322 / 774 * 0.9), calc(var(--main-h) * 0.115));
-  --hand-w: calc(var(--arena-w) * 0.84);
-  --hand-h: min(calc(var(--hand-w) * 380 / 657 * 0.98), calc(var(--main-h) * 0.26));
-  --hand-card-h: calc(var(--hand-h) * 0.66);
-  --hand-card-w: calc(var(--hand-card-h) * 0.7);
+  --hand-w: calc(var(--arena-w) * 0.79);
+  --hand-h: min(calc(var(--hand-w) * 280 / 657 * 0.98), calc(var(--main-h) * 0.28));
+  --hand-card-h: calc(var(--hand-h) * 0.60);
+  --hand-card-w: calc(var(--hand-card-h) * 0.70);
   --hand-card-font: clamp(7px, calc(var(--hand-card-h) * 0.078), 12px);
   --lanes-h: min(calc(var(--arena-w) * 379 / 658 * 1.2), calc(var(--main-h) * 0.62));
   --arena-gap: clamp(4px, 0.55vh, 10px);
   --lane-inset-x: 2.5%;
   --lane-inset-y: 1.75%;
-  --strike-btn-arena-size: min(calc(var(--hand-h) * 0.82), 6.5rem);
+  --strike-btn-arena-size: min(calc(var(--hand-h) * 1.32), 11.8rem);
   --strike-btn-size: var(--strike-btn-arena-size);
-  --hand-strike-right: calc(var(--strike-btn-arena-size) * -0.34);
+  --hand-strike-right: calc(var(--strike-btn-arena-size) * -0.84);
   --hand-strike-overhang: calc(var(--strike-btn-arena-size) * 0.4);
   --shop-refresh-size: min(calc(var(--shop-w) * 0.4), 4rem);
   --main-deck-inset-x: 8%;
@@ -286,6 +286,7 @@ body {
   background-size: contain;
   cursor: pointer;
   transition: transform 0.2s, filter 0.2s;
+  filter: drop-shadow(0 4px 10px rgba(200, 127, 53, 0.65));
 }
 
 .shop-refresh-btn:hover:not(:disabled) {
