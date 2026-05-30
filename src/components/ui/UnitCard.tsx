@@ -1,4 +1,5 @@
 import { cn } from "../../utils/cn";
+import { CardStatIcon } from "./CardStatIcon";
 
 type UnitCardProps = {
   cardId: string;
@@ -79,22 +80,8 @@ export function UnitCard({
       </div>
 
       <div className={cn("relative z-10 mt-auto flex items-end justify-between", lane ? "p-[5%]" : "p-2")}>
-        <span
-          className={cn(
-            "rounded-md border border-amber-600/50 bg-amber-500 font-extrabold text-slate-900 shadow",
-            lane ? "px-[8%] py-[3%] text-[clamp(7px,2.4cqi,11px)]" : "px-2 py-0.5 text-[11px]"
-          )}
-        >
-          ⚔ {atk}
-        </span>
-        <span
-          className={cn(
-            "rounded-md border border-emerald-700/50 bg-emerald-500 font-extrabold text-slate-900 shadow",
-            lane ? "px-[8%] py-[3%] text-[clamp(7px,2.4cqi,11px)]" : "px-2 py-0.5 text-[11px]"
-          )}
-        >
-          ♥ {hp}
-        </span>
+        <CardStatIcon kind="attack" value={atk} size={lane ? "lane" : "lane"} />
+        <CardStatIcon kind="hp" value={hp} size={lane ? "lane" : "lane"} />
       </div>
 
       {moving && (

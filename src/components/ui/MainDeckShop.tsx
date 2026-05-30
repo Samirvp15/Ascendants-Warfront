@@ -33,7 +33,7 @@ export function MainDeckShop<T extends { uid: string; def: { price: number; type
       >
         <header className="main-deck-header">
           <h3 className="font-display text-[0.85em] font-bold tracking-wider text-amber-300 drop-shadow-md">
-            Main Deck
+            MAIN DECK
           </h3>
           <p className="font-display mt-[0.25em] text-[0.72em] text-amber-100 drop-shadow-md">
             {mainDeckRemaining} cards in pool
@@ -67,7 +67,9 @@ export function MainDeckShop<T extends { uid: string; def: { price: number; type
           title={`Refresh shop (${refreshes} left)`}
           aria-label={`Refresh shop, ${refreshes} remaining`}
           className="shop-refresh-btn"
-        />
+        >
+          <span className="shop-refresh-btn__count">{refreshes}</span>
+        </button>
       </div>
     </>
   );

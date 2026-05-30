@@ -34,11 +34,8 @@ export function GameSidebar({
           className="h-[var(--logo-h)] w-auto max-w-[94%] object-contain drop-shadow-[0_8px_32px_rgba(0,0,0,0.85)]"
         />
       </div>
-      <p
-        className="w-full max-w-full px-0.5 text-center text-[0.62em] leading-snug text-slate-400/95 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]"
-        style={{ fontFamily: "Cinzel, Georgia, serif" }}
-      >
-        Round {round} · Main deck: {mainDeckRemaining} cards left
+      <p className="font-display w-full max-w-full px-0.5 text-center text-[0.62em] leading-snug text-slate-400/95 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
+        Round {round} · MAIN DECK: {mainDeckRemaining} cards left
       </p>
 
       <AbsoluteFrameAnchor

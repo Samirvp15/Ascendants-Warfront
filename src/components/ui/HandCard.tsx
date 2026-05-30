@@ -1,4 +1,5 @@
 import { cn } from "../../utils/cn";
+import { CardStatIcon } from "./CardStatIcon";
 
 type HandCardData = {
   uid: string;
@@ -35,6 +36,8 @@ export function HandCard({
   const isHealNexus = card.effect === "heal_nexus";
   const isDamageNexus = card.effect === "damage_nexus";
   const autoCastable = isHealNexus || isDamageNexus;
+  const spellStatKind =
+    isDamageNexus || card.effect === "damage" ? ("attack" as const) : ("hp" as const);
 
   return (
     <button
@@ -69,46 +72,84 @@ export function HandCard({
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/55 to-transparent" />
       </div>
 
-      <div className={cn("hand-card-cost absolute left-1 top-1 z-10 flex items-center justify-center rounded-full border border-blue-400/60 bg-blue-700/95 font-black text-white shadow", !compact && "h-5 w-5 text-[10px]")}>
-        {card.cost}
-      </div>
+      {compact ? (
+        <>
+          <CardStatIcon
+            kind="mana"
+            value={card.cost}
+            size="xs"
+            className="hand-card-stat hand-card-stat--mana"
+          />
 
-      <div className={cn("hand-card-type absolute right-1 top-1 z-10 rounded border border-white/20 bg-black/65 px-1 py-0.5 font-bold uppercase tracking-wider text-white/90", !compact && "text-[7px]")}>
-        {isDamageNexus ? "💥nex" : isHealNexus ? "♥nex" : isUnit ? "unit" : "spell"}
-      </div>
+          {isUnit ? (
+            <>
+              <CardStatIcon
+                kind="attack"
+                value={card.atk ?? 0}
+                size="xs"
+                className="hand-card-stat hand-card-stat--attack"
+              />
+              <CardStatIcon kind="hp" value={card.hp ?? 0} size="xs" className="hand-card-stat hand-card-stat--hp" />
+            </>
+          ) : (
+            <CardStatIcon
+              kind={spellStatKind}
+              value={card.value ?? 0}
+              size="xs"
+              className={cn(
+                "hand-card-stat",
+                spellStatKind === "attack" ? "hand-card-stat--attack" : "hand-card-stat--hp"
+              )}
+            />
+          )}
 
-      <div className={cn("relative z-10 mt-auto", compact ? "p-1" : "p-1.5")}>
-        <div className={cn("card-nameplate mb-0.5 px-1 py-0.5 text-center", compact && "mb-0")}>
-          <div className={cn("hand-card-name font-display truncate font-bold text-amber-50", !compact && "text-[9px]")}>{card.name}</div>
-        </div>
-        {isUnit ? (
-          <div className="flex justify-between gap-0.5">
-            <span className={cn("hand-card-stat rounded border border-amber-600/40 bg-amber-500/95 font-extrabold text-slate-900", compact ? "px-0.5 py-0" : "px-1 py-0.5 text-[8px]")}>
-              ⚔{card.atk}
-            </span>
-            <span className={cn("hand-card-stat rounded border border-emerald-700/40 bg-emerald-500/95 font-extrabold text-slate-900", compact ? "px-0.5 py-0" : "px-1 py-0.5 text-[8px]")}>
-              ♥{card.hp}
-            </span>
+          <div className="hand-card-type absolute right-[3%] top-[3%] z-10 rounded border border-white/20 bg-black/65 px-1 py-0.5 font-bold uppercase tracking-wider text-white/90">
+            {isDamageNexus ? "💥nex" : isHealNexus ? "♥nex" : isUnit ? "unit" : "spell"}
           </div>
-        ) : (
-          <div className={cn("hand-card-stat rounded bg-black/55 px-1 py-0.5 text-center font-semibold text-white/90", !compact && "text-[8px]")}>
-            {isDamageNexus
-              ? `💥-${card.value}`
-              : isHealNexus
-                ? `♥+${card.value}`
-                : card.effect === "damage"
-                  ? `⚔${card.value}`
-                  : `💚${card.value}`}
+
+          <div className="hand-card-footer absolute z-10">
+            <div className="card-nameplate px-1 py-0.5 text-center">
+              <div className="hand-card-name font-display truncate font-bold text-amber-50">{card.name}</div>
+            </div>
           </div>
-        )}
-      </div>
+        </>
+      ) : (
+        <>
+          <CardStatIcon kind="mana" value={card.cost} size="sm" className="absolute left-0.5 top-0.5 z-10" />
+
+          <div className="hand-card-type absolute right-1 top-1 z-10 rounded border border-white/20 bg-black/65 px-1 py-0.5 text-[7px] font-bold uppercase tracking-wider text-white/90">
+            {isDamageNexus ? "💥nex" : isHealNexus ? "♥nex" : isUnit ? "unit" : "spell"}
+          </div>
+
+          <div className="relative z-10 mt-auto p-1.5">
+            <div className="card-nameplate mb-0.5 px-1 py-0.5 text-center">
+              <div className="font-display truncate text-[9px] font-bold text-amber-50">{card.name}</div>
+            </div>
+            {isUnit ? (
+              <div className="flex items-end justify-between gap-0.5">
+                <CardStatIcon kind="attack" value={card.atk ?? 0} size="sm" />
+                <CardStatIcon kind="hp" value={card.hp ?? 0} size="sm" />
+              </div>
+            ) : (
+              <div className="flex justify-center">
+                <CardStatIcon kind={spellStatKind} value={card.value ?? 0} size="sm" />
+              </div>
+            )}
+          </div>
+        </>
+      )}
 
       {selected && (
         <div className="pointer-events-none absolute inset-0 z-20 rounded-md ring-2 ring-amber-400 ring-offset-1 ring-offset-slate-900" />
       )}
 
       {autoCastable && clickable && (
-        <div className={cn("hand-card-tap absolute left-1/2 z-20 -translate-x-1/2 rounded-full bg-amber-400 font-black uppercase tracking-wider text-slate-900 shadow", compact ? "-bottom-1.5 px-1.5 py-0" : "-bottom-2 px-2 py-0.5 text-[7px]")}>
+        <div
+          className={cn(
+            "hand-card-tap absolute left-1/2 z-20 -translate-x-1/2 rounded-full bg-amber-400 font-black uppercase tracking-wider text-slate-900 shadow",
+            compact ? "-bottom-1.5 px-1.5 py-0 text-[6px]" : "-bottom-2 px-2 py-0.5 text-[7px]"
+          )}
+        >
           Tap
         </div>
       )}

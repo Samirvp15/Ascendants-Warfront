@@ -771,7 +771,7 @@ export default function App() {
 
   return (
     <div
-      className="game-shell game-layout w-full"
+      className="game-shell game-layout font-display w-full"
       style={{
         backgroundImage: `url('/images/bg_battlefield.png')`,
         backgroundSize: "cover",

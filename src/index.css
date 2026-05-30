@@ -1,7 +1,8 @@
-@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&display=swap");
 @import "tailwindcss";
 
 :root {
+  --font-display: "Aboreto", Georgia, serif;
   --bg-deep: #0a0a0f;
   --frame-stone: #2a2520;
   --frame-metal: #4a4035;
@@ -24,7 +25,7 @@ body,
 }
 
 body {
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-display);
   color: var(--text-primary);
   background-color: var(--bg-deep);
 }
@@ -33,6 +34,7 @@ body {
   height: 100vh;
   width: 100vw;
   overflow: hidden;
+  font-family: var(--font-display);
 }
 
 /* Three-column layout: sidebar | arena | shop */
@@ -45,8 +47,8 @@ body {
   --arena-w: min(calc(var(--center-w) * 0.9), 820px);
   --logo-block-h: clamp(118px, 18vh, 168px);
   --logo-h: min(calc(var(--sidebar-w) * 0.52), calc(var(--logo-block-h) * 0.92));
-  --hiw-w: calc(var(--sidebar-w) * 0.94);
-  --hiw-h: calc(var(--hiw-w) * 558 / 447);
+  --hiw-w: calc(var(--sidebar-w) * 0.74);
+  --hiw-h: calc(var(--hiw-w) * 558 / 537);
   --enemy-w: calc(var(--arena-w) * 0.76);
   --enemy-h: min(calc(var(--enemy-w) * 322 / 774 * 0.9), calc(var(--main-h) * 0.115));
   --hand-w: calc(var(--arena-w) * 0.79);
@@ -62,11 +64,11 @@ body {
   --strike-btn-size: var(--strike-btn-arena-size);
   --hand-strike-right: calc(var(--strike-btn-arena-size) * -0.84);
   --hand-strike-overhang: calc(var(--strike-btn-arena-size) * 0.4);
-  --shop-refresh-size: min(calc(var(--shop-w) * 0.4), 4rem);
+  --shop-refresh-size: min(calc(var(--shop-w) * 0.52), 5.25rem);
   --main-deck-inset-x: 8%;
   --main-deck-inset-top: 14%;
   --main-deck-inset-bottom: 10%;
-  --main-deck-refresh-bottom: calc(var(--shop-refresh-size) * -0.34);
+  --main-deck-refresh-bottom: -1.35rem;
   --main-deck-refresh-overhang: calc(var(--shop-refresh-size) * 0.4);
   --main-deck-section-gap: 1.6%;
   --shop-card-scale: 1.14;
@@ -82,7 +84,7 @@ body {
 }
 
 .font-display {
-  font-family: Cinzel, Georgia, serif;
+  font-family: var(--font-display);
 }
 
 .stone-panel {
@@ -163,7 +165,7 @@ body {
 .strike-btn__label {
   position: relative;
   z-index: 1;
-  font-family: Cinzel, serif;
+  font-family: var(--font-display);
   font-weight: 900;
   font-size: clamp(0.68rem, calc(var(--strike-btn-size) * 0.13), 0.88rem);
   letter-spacing: 0.13em;
@@ -222,26 +224,114 @@ body {
   font-size: var(--hand-card-font);
 }
 
-.hand-deck-zone .hand-card-compact .hand-card-cost {
-  height: 1.35em;
-  width: 1.35em;
-  font-size: 0.72em;
-}
-
 .hand-deck-zone .hand-card-compact .hand-card-type {
   font-size: 0.62em;
+}
+
+.hand-deck-zone .hand-card-compact .hand-card-stat {
+  position: absolute;
+  z-index: 12;
+}
+
+.hand-deck-zone .hand-card-compact .hand-card-stat--mana {
+  top: 0;
+  left: 0;
+  transform: translate(-6%, -6%);
+}
+
+.hand-deck-zone .hand-card-compact .hand-card-stat--attack {
+  bottom: 0;
+  left: 0;
+  transform: translate(-6%, 6%);
+}
+
+.hand-deck-zone .hand-card-compact .hand-card-stat--hp {
+  bottom: 0;
+  right: 0;
+  transform: translate(6%, 6%);
+}
+
+.hand-deck-zone .hand-card-compact .hand-card-footer {
+  left: 18%;
+  right: 18%;
+  bottom: 32%;
+  pointer-events: none;
+}
+
+.hand-deck-zone .hand-card-compact .card-stat-icon--xs {
+  --card-stat-size: 4em;
+  --card-stat-font: 2em;
 }
 
 .hand-deck-zone .hand-card-compact .hand-card-name {
   font-size: 0.82em;
 }
 
-.hand-deck-zone .hand-card-compact .hand-card-stat {
-  font-size: 0.72em;
-}
-
 .hand-deck-zone .hand-card-compact .hand-card-tap {
   font-size: 0.62em;
+}
+
+.card-stat-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--card-stat-size, 2rem);
+  height: var(--card-stat-size, 2rem);
+}
+
+.card-stat-icon__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.card-stat-icon__value {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: var(--card-stat-font, 0.62rem);
+  line-height: 1;
+  color: #fffbeb;
+  -webkit-text-stroke: 0.35px rgba(0, 0, 0, 0.85);
+  text-shadow:
+    0 0 3px rgba(0, 0, 0, 1),
+    0 1px 2px rgba(0, 0, 0, 0.95);
+  pointer-events: none;
+  user-select: none;
+}
+
+.card-stat-icon--xs {
+  --card-stat-size: 1.65rem;
+  --card-stat-font: 0.58rem;
+}
+
+.card-stat-icon--sm {
+  --card-stat-size: 1.85rem;
+  --card-stat-font: 0.66rem;
+}
+
+.card-stat-icon--md {
+  --card-stat-size: 2.15rem;
+  --card-stat-font: 0.78rem;
+}
+
+.card-stat-icon--lane {
+  width: clamp(1.2rem, 17cqi, 2.15rem);
+  height: clamp(1.2rem, 17cqi, 2.15rem);
+  font-size: clamp(6px, 2.1cqi, 11px);
+}
+
+.card-stat-icon--lane .card-stat-icon__value {
+  font-size: 0.58em;
 }
 
 .hand-deck-zone__deck .absolute-frame {
@@ -273,7 +363,10 @@ body {
 }
 
 .shop-refresh-btn {
-  display: block;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
   width: var(--shop-refresh-size);
   height: var(--shop-refresh-size);
@@ -287,6 +380,32 @@ body {
   cursor: pointer;
   transition: transform 0.2s, filter 0.2s;
   filter: drop-shadow(0 4px 10px rgba(200, 127, 53, 0.65));
+}
+
+.shop-refresh-btn__count {
+  position: relative;
+  z-index: 1;
+  top: -5%;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(0.9rem, calc(var(--shop-refresh-size) * 0.34), 1.2rem);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(
+    180deg,
+    #fffbeb 0%,
+    #fde68a 22%,
+    #fbbf24 48%,
+    #e97f06 78%,
+    #ca5811 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-stroke: 0.45px rgba(45, 22, 0, 0.75);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 8px rgba(0, 0, 0, 0.55));
+  pointer-events: none;
+  user-select: none;
 }
 
 .shop-refresh-btn:hover:not(:disabled) {
@@ -401,7 +520,7 @@ body {
 }
 
 .header-btn {
-  font-family: Cinzel, Georgia, serif;
+  font-family: var(--font-display);
   background: transparent url("/images/header_button.png") center / 88% 88% no-repeat;
   border: none;
   min-width: 6.75rem;
@@ -445,7 +564,7 @@ body {
   padding: 0.22em 0.55em 0.22em 0.65em;
   border: none;
   background: transparent url("/images/header_button.png") center / 100% 100% no-repeat;
-  font-family: Cinzel, Georgia, serif;
+  font-family: var(--font-display);
   font-size: 0.76rem;
   font-weight: 800;
   letter-spacing: 0.04em;
