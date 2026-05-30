@@ -858,7 +858,7 @@ export default function App() {
                         paddingBottom: "var(--lane-inset-y)",
                       }}
                     >
-                      <div className="@container flex min-h-0 flex-1 items-stretch justify-center">
+                      <div className="@container flex min-h-0 flex-1 items-center justify-center">
                         {e ? (
                           <UnitCard
                             cardId={e.cardId}
@@ -897,7 +897,7 @@ export default function App() {
                         )}
                       </div>
 
-                      <div className="@container flex min-h-0 flex-1 items-stretch justify-center">
+                      <div className="@container flex min-h-0 flex-1 items-center justify-center">
                         {p ? (
                           <UnitCard
                             cardId={p.cardId}

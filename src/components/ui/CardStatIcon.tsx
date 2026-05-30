@@ -11,7 +11,7 @@ type StatKind = keyof typeof STAT_IMAGES;
 type CardStatIconProps = {
   kind: StatKind;
   value: number | string;
-  size?: "xs" | "sm" | "md" | "lane";
+  size?: "xs" | "sm" | "md";
   className?: string;
 };
 
@@ -23,7 +23,6 @@ export function CardStatIcon({ kind, value, size = "md", className }: CardStatIc
         size === "xs" && "card-stat-icon--xs",
         size === "sm" && "card-stat-icon--sm",
         size === "md" && "card-stat-icon--md",
-        size === "lane" && "card-stat-icon--lane",
         className
       )}
       aria-hidden

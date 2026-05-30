@@ -60,6 +60,7 @@ body {
   --arena-gap: clamp(4px, 0.55vh, 10px);
   --lane-inset-x: 2.5%;
   --lane-inset-y: 1.75%;
+  --lane-card-scale: 0.72;
   --strike-btn-arena-size: min(calc(var(--hand-h) * 1.32), 11.8rem);
   --strike-btn-size: var(--strike-btn-arena-size);
   --hand-strike-right: calc(var(--strike-btn-arena-size) * -0.84);
@@ -271,6 +272,59 @@ body {
   font-size: 0.62em;
 }
 
+.lane-unit-card {
+  align-self: center;
+  width: calc(100% * var(--lane-card-scale));
+  height: calc(100% * var(--lane-card-scale));
+  max-width: calc(100% * var(--lane-card-scale));
+  max-height: calc(100% * var(--lane-card-scale));
+  margin: auto;
+  font-size: var(--hand-card-font);
+}
+
+.lane-unit-card .hand-card-stat {
+  position: absolute;
+  z-index: 12;
+}
+
+.lane-unit-card .hand-card-stat--attack {
+  bottom: 0;
+  left: 0;
+  transform: translate(-6%, 6%);
+}
+
+.lane-unit-card .hand-card-stat--hp {
+  bottom: 0;
+  right: 0;
+  transform: translate(6%, 6%);
+}
+
+.lane-unit-card .hand-card-footer {
+  left: 18%;
+  right: 18%;
+  bottom: 32%;
+  pointer-events: none;
+}
+
+.lane-unit-card .card-stat-icon--xs {
+  --card-stat-size: 4em;
+  --card-stat-font: 2em;
+}
+
+.lane-unit-card .hand-card-name {
+  font-size: 0.82em;
+}
+
+.lane-empty-slot {
+  align-self: center;
+  width: calc(100% * var(--lane-card-scale));
+  height: calc(100% * var(--lane-card-scale));
+  max-width: calc(100% * var(--lane-card-scale));
+  max-height: calc(100% * var(--lane-card-scale));
+  margin: auto;
+  font-size: clamp(7px, 2.2cqi, 10px);
+}
+
 .card-stat-icon {
   position: relative;
   display: inline-flex;
@@ -322,16 +376,6 @@ body {
 .card-stat-icon--md {
   --card-stat-size: 2.15rem;
   --card-stat-font: 0.78rem;
-}
-
-.card-stat-icon--lane {
-  width: clamp(1.2rem, 17cqi, 2.15rem);
-  height: clamp(1.2rem, 17cqi, 2.15rem);
-  font-size: clamp(6px, 2.1cqi, 11px);
-}
-
-.card-stat-icon--lane .card-stat-icon__value {
-  font-size: 0.58em;
 }
 
 .hand-deck-zone__deck .absolute-frame {
@@ -387,7 +431,7 @@ body {
   z-index: 1;
   top: -5%;
   font-family: var(--font-display);
-  font-weight: 500;
+  font-weight: 600;
   font-size: clamp(0.9rem, calc(var(--shop-refresh-size) * 0.34), 1.2rem);
   letter-spacing: 0.02em;
   font-variant-numeric: tabular-nums;
@@ -395,9 +439,9 @@ body {
     180deg,
     #fffbeb 0%,
     #fde68a 22%,
-    #fbbf24 48%,
-    #e97f06 78%,
-    #ca5811 100%
+    #f7c13a 48%,
+    #e5aa67 78%,
+    #c38259 100%
   );
   -webkit-background-clip: text;
   background-clip: text;

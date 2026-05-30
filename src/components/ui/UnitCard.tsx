@@ -40,7 +40,7 @@ export function UnitCard({
       className={cn(
         "card-frame relative flex flex-col overflow-hidden transition-all duration-700",
         lane
-          ? "h-full min-h-0 w-full min-w-0 max-h-full max-w-full"
+          ? "lane-unit-card h-full min-h-0 w-full min-w-0 max-h-full max-w-full"
           : "h-full max-h-[130px] w-full max-w-[155px]",
         isEnemy ? "border-rose-700/70" : "cursor-pointer border-sky-600/70",
         selected && "scale-105 ring-2 ring-amber-400 shadow-lg shadow-amber-400/30",
@@ -66,27 +66,42 @@ export function UnitCard({
         />
       </div>
 
-      <div className={cn("relative z-10", lane ? "p-[5%]" : "p-2")}>
-        <div className={cn("card-nameplate text-center", lane ? "px-[6%] py-[4%]" : "px-2 py-1")}>
-          <div
-            className={cn(
-              "font-display font-bold tracking-wide text-amber-50 drop-shadow",
-              lane ? "text-[clamp(8px,2.8cqi,12px)] leading-tight" : "text-[11px]"
-            )}
-          >
-            {name}
-          </div>
-        </div>
-      </div>
+      {lane ? (
+        <>
+          <CardStatIcon
+            kind="attack"
+            value={atk}
+            size="xs"
+            className="hand-card-stat hand-card-stat--attack"
+          />
+          <CardStatIcon kind="hp" value={hp} size="xs" className="hand-card-stat hand-card-stat--hp" />
 
-      <div className={cn("relative z-10 mt-auto flex items-end justify-between", lane ? "p-[5%]" : "p-2")}>
-        <CardStatIcon kind="attack" value={atk} size={lane ? "lane" : "lane"} />
-        <CardStatIcon kind="hp" value={hp} size={lane ? "lane" : "lane"} />
-      </div>
+          <div className="hand-card-footer absolute z-10">
+            <div className="card-nameplate px-1 py-0.5 text-center">
+              <div className="hand-card-name font-display truncate font-bold text-amber-50">{name}</div>
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="relative z-10 p-2">
+            <div className="card-nameplate px-2 py-1 text-center">
+              <div className="font-display text-[11px] font-bold tracking-wide text-amber-50 drop-shadow">
+                {name}
+              </div>
+            </div>
+          </div>
+
+          <div className="relative z-10 mt-auto flex items-end justify-between p-2">
+            <CardStatIcon kind="attack" value={atk} size="sm" />
+            <CardStatIcon kind="hp" value={hp} size="sm" />
+          </div>
+        </>
+      )}
 
       {moving && (
         <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
-          <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-black text-slate-900 shadow-lg animate-pulse">
+          <span className="font-display rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-black text-slate-900 shadow-lg animate-pulse">
             MOVING
           </span>
         </div>
@@ -94,7 +109,7 @@ export function UnitCard({
 
       {showDmg && dmg != null && !moving && (
         <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
-          <span className="rounded-full bg-rose-600/95 px-3 py-1 text-base font-bold text-white shadow-lg animate-bounce">
+          <span className="font-display rounded-full bg-rose-600/95 px-3 py-1 text-base font-bold text-white shadow-lg animate-bounce">
             -{dmg}
           </span>
         </div>
@@ -114,10 +129,8 @@ export function EmptySlot({ label, active, lane = false, className }: EmptySlotP
   return (
     <div
       className={cn(
-        "flex items-center justify-center rounded-md border border-dashed",
-        lane
-          ? "h-full min-h-0 w-full min-w-0 max-h-full max-w-full text-[clamp(7px,2.2cqi,10px)]"
-          : "h-full max-h-[76px] w-full max-w-[155px] text-[9px]",
+        "font-display flex items-center justify-center rounded-md border border-dashed",
+        lane ? "lane-empty-slot" : "h-full max-h-[76px] w-full max-w-[155px] text-[9px]",
         active ? "border-amber-400/70 bg-amber-400/5 text-amber-300" : "border-slate-600/50 text-slate-600",
         className
       )}
