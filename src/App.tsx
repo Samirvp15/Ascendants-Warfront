@@ -5,7 +5,6 @@ import { GameControls, GameSidebar } from "./components/ui/GameHeader";
 import { HandCard } from "./components/ui/HandCard";
 import { MainDeckShop } from "./components/ui/MainDeckShop";
 import { PlayerHandDeck } from "./components/ui/PlayerHandDeck";
-import { StrikeButton } from "./components/ui/StrikeButton";
 import { EmptySlot, UnitCard } from "./components/ui/UnitCard";
 import { cn } from "./utils/cn";
 
@@ -795,7 +794,7 @@ export default function App() {
         />
 
         {/* Center column — enemy top, lanes middle, hand deck bottom */}
-        <main className="flex h-full min-h-0 flex-col items-center overflow-hidden py-[var(--arena-gap)]">
+        <main className="flex h-full min-h-0 flex-col items-center overflow-hidden pt-[var(--arena-gap)] pb-0">
           <div
             className="relative shrink-0"
             style={{ width: "var(--enemy-w)", height: "var(--enemy-h)" }}
@@ -954,6 +953,8 @@ export default function App() {
                 deckEmpty={deckCards.length === 0}
                 selectedCardName={selectedCard?.name ?? null}
                 isMoving={movingUnitId !== null && !selectedCard}
+                strikeDisabled={phase !== "playerTurn" || busy || !!winner}
+                onStrike={endTurn}
               >
                 {deckCards.length === 0 && (
                   <div className="font-display flex w-full items-center justify-center px-2 py-1 text-center text-[9px] text-rose-200 drop-shadow-md">
@@ -986,12 +987,6 @@ export default function App() {
                   );
                 })}
               </PlayerHandDeck>
-            </div>
-            <div className="hand-strike-btn">
-              <StrikeButton
-                disabled={phase !== "playerTurn" || busy || !!winner}
-                onClick={endTurn}
-              />
             </div>
           </div>
         </main>

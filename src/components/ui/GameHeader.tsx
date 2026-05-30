@@ -78,7 +78,7 @@ export function GameControls({ displayGold, flashGold, onNewMatch, onReset }: Ga
         {flashGold !== null && (
           <span className="gold-amount-badge__bonus animate-pulse tabular-nums">+{flashGold}</span>
         )}
-        <GoldIcon size="sm" className="gold-amount-badge__icon" />
+        <GoldIcon size="lg" className="gold-amount-badge__icon" />
       </span>
       <HeaderButton onClick={onNewMatch}>New Match</HeaderButton>
       <HeaderButton onClick={onReset}>Reset All</HeaderButton>
