@@ -6,7 +6,7 @@ import { HandCard } from "./components/ui/HandCard";
 import { MainDeckShop } from "./components/ui/MainDeckShop";
 import { PlayerHandDeck } from "./components/ui/PlayerHandDeck";
 import { EmptySlot, UnitCard } from "./components/ui/UnitCard";
-import { playLaneClash, resetAllCombatUnits } from "./utils/attackAnimation";
+import { playLaneClash, playUnopposedAttack, resetAllCombatUnits } from "./utils/attackAnimation";
 import { cn } from "./utils/cn";
 
 // ---------- TYPES ----------
@@ -84,9 +84,9 @@ const STARTER_DECK_IDS = ["scout", "acolyte", "soldier", "guardian"] as const;
 
 // Gold economy — tuned so you're never stuck
 const GOLD = {
-  WIN_ROUND: 5,       // 5 + 1 income = 6💰 displayed
-  TIE_ROUND: 3,       // 3 + 1 income = 4💰 displayed
-  LOSE_ROUND: 2,      // 2 + 1 income = 3💰 displayed
+  WIN_ROUND: 7,       // 7 + 1 income = 8💰 displayed
+  TIE_ROUND: 5,       // 5 + 1 income = 6💰 displayed
+  LOSE_ROUND: 3,      // 3 + 1 income = 4💰 displayed
   WIN_MATCH: 6,
   INCOME_PER_ROUND: 1, // passive income every round regardless of result
   FREE_RESCUE: 2,      // free gold when deck is empty and gold === 0 (emergency)
@@ -226,7 +226,6 @@ export default function App() {
   const [unitDamageBursts, setUnitDamageBursts] = useState<
     Record<string, { key: number; amount: number }>
   >({});
-  const [hits, setHits] = useState<{ id: string; targetId: string }[]>([]);
 
   const unitRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const combatRunningRef = useRef(false);
@@ -245,16 +244,6 @@ export default function App() {
   const mainDeckRef = useRef(mainDeck);
   shopEntriesRef.current = shopEntries;
   mainDeckRef.current = mainDeck;
-
-  const triggerHitEffect = useCallback((target: HTMLElement) => {
-    const targetId = target.dataset.unitId;
-    if (!targetId) return;
-    const id = Math.random().toString();
-    setHits((prev) => [...prev, { id, targetId }]);
-    setTimeout(() => {
-      setHits((prev) => prev.filter((h) => h.id !== id));
-    }, 520);
-  }, []);
 
   const pulseUnitDamage = useCallback((unitId: string, amount: number) => {
     setUnitDamageBursts((prev) => ({
@@ -323,7 +312,6 @@ export default function App() {
     setCombatStep("idle");
     setCombatData(null);
     setUnitDamageBursts({});
-    setHits([]);
     unitRefs.current = {};
     combatRunningRef.current = false;
     setRound(1);
@@ -673,47 +661,56 @@ export default function App() {
       let pb = [...playerBoard];
       let eb = [...enemyBoard];
 
-      // Resolve clashes left → right (lane 0, 1, 2)
+      // Resolve lanes left → right (clash or unopposed attack)
       for (const l of LANES) {
         const pSnap = pb[l];
         const eSnap = eb[l];
-        if (!pSnap || !eSnap) continue;
 
-        const clashResult = await playLaneClash(
-          pSnap.id,
-          eSnap.id,
-          unitRefs,
-          triggerHitEffect,
-          async () => {
-            const nextEnemyHp = eSnap.hp - pSnap.atk;
-            const nextPlayerHp = pSnap.hp - eSnap.atk;
-            const playerDead = nextPlayerHp <= 0;
-            const enemyDead = nextEnemyHp <= 0;
+        if (pSnap && eSnap) {
+          const clashResult = await playLaneClash(
+            pSnap.id,
+            eSnap.id,
+            unitRefs,
+            async () => {
+              const nextEnemyHp = Math.max(0, eSnap.hp - pSnap.atk);
+              const nextPlayerHp = Math.max(0, pSnap.hp - eSnap.atk);
 
-            eb[l] = enemyDead ? { ...eSnap, hp: 0 } : { ...eSnap, hp: nextEnemyHp };
-            pb[l] = playerDead ? { ...pSnap, hp: 0 } : { ...pSnap, hp: nextPlayerHp };
-            eDmg[l] = pSnap.atk;
-            pDmg[l] = eSnap.atk;
-            tP += pSnap.atk;
-            tE += eSnap.atk;
+              eb[l] = nextEnemyHp === 0 ? { ...eSnap, hp: 0 } : { ...eSnap, hp: nextEnemyHp };
+              pb[l] = nextPlayerHp === 0 ? { ...pSnap, hp: 0 } : { ...pSnap, hp: nextPlayerHp };
+              eDmg[l] = pSnap.atk;
+              pDmg[l] = eSnap.atk;
+              tP += pSnap.atk;
+              tE += eSnap.atk;
 
-            setEnemyBoard([...eb]);
-            setPlayerBoard([...pb]);
-            pulseUnitDamage(eSnap.id, pSnap.atk);
-            pulseUnitDamage(pSnap.id, eSnap.atk);
+              setEnemyBoard([...eb]);
+              setPlayerBoard([...pb]);
+              pulseUnitDamage(eSnap.id, pSnap.atk);
+              pulseUnitDamage(pSnap.id, eSnap.atk);
 
+              await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+              return { playerHp: nextPlayerHp, enemyHp: nextEnemyHp };
+            }
+          );
+          if (cancelled) return;
+
+          if (clashResult.enemyHp === 0) eb[l] = null;
+          if (clashResult.playerHp === 0) pb[l] = null;
+          setEnemyBoard([...eb]);
+          setPlayerBoard([...pb]);
+        } else if (pSnap) {
+          await playUnopposedAttack(pSnap.id, unitRefs, async () => {
             await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-            return { playerDead, enemyDead };
-          }
-        );
-        if (cancelled) return;
+          });
+          if (cancelled) return;
+        } else if (eSnap) {
+          await playUnopposedAttack(eSnap.id, unitRefs, async () => {
+            await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+          });
+          if (cancelled) return;
+        } else {
+          continue;
+        }
 
-        if (clashResult.enemyDead) eb[l] = null;
-        if (clashResult.playerDead) pb[l] = null;
-        setEnemyBoard([...eb]);
-        setPlayerBoard([...pb]);
-
-        resetAllCombatUnits(unitRefs);
         await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
         await new Promise((r) => setTimeout(r, T.CLASH_LANE_GAP));
       }
@@ -738,7 +735,7 @@ export default function App() {
       cancelled = true;
     };
     // eslint-disable-next-line
-  }, [phase, combatStep, triggerHitEffect, pulseUnitDamage]);
+  }, [phase, combatStep, pulseUnitDamage]);
 
   useEffect(() => {
     if (combatStep !== "deaths" || !combatData) return;
@@ -842,7 +839,6 @@ export default function App() {
       setCombatStep("idle");
       setCombatData(null);
       setUnitDamageBursts({});
-      setHits([]);
       setBusy(false);
     }, T.REWARDS_SHOW);
     return () => clearTimeout(t);
@@ -873,7 +869,6 @@ export default function App() {
     setRoundResult(null);
     setCombatData(null);
     setUnitDamageBursts({});
-    setHits([]);
     unitRefs.current = {};
     combatRunningRef.current = false;
     setCombatStep("idle");
@@ -985,8 +980,6 @@ export default function App() {
                             lane
                             damageBurstKey={enemyBurst?.key ?? 0}
                             damageAmount={enemyBurst?.amount ?? 0}
-                            showHit={hits.some((h) => h.targetId === e.id)}
-                            dying={combatStep === "deaths" && e.hp <= 0}
                           />
                         ) : (
                           <EmptySlot
@@ -1005,7 +998,7 @@ export default function App() {
                         )}
                       </div>
 
-                      <div className="relative flex shrink-0 items-center py-[0.15%]">
+                      <div className="lane-clash-line relative flex shrink-0 items-center py-[0.15%]">
                         <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
                         {p && e && (
                           <span className="absolute inset-0 flex items-center justify-center text-[1em] font-bold text-amber-400">
@@ -1030,8 +1023,6 @@ export default function App() {
                             lane
                             damageBurstKey={playerBurst?.key ?? 0}
                             damageAmount={playerBurst?.amount ?? 0}
-                            showHit={hits.some((h) => h.targetId === p.id)}
-                            dying={combatStep === "deaths" && p.hp <= 0}
                             selected={Boolean(isMoveSource)}
                             moving={Boolean(isMoveSource)}
                             onClick={(ev) => {

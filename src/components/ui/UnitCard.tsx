@@ -15,7 +15,6 @@ type UnitCardProps = {
   side: "player" | "enemy";
   damageBurstKey?: number;
   damageAmount?: number;
-  showHit?: boolean;
   dying?: boolean;
   selected?: boolean;
   moving?: boolean;
@@ -35,7 +34,6 @@ export const UnitCard = memo(
       side,
       damageBurstKey = 0,
       damageAmount = 0,
-      showHit,
       dying,
       selected,
       moving,
@@ -89,10 +87,7 @@ export const UnitCard = memo(
               key={`${unitId}-hp-${damageBurstKey}`}
               value={hp}
               size="xs"
-              className={cn(
-                "hand-card-stat hand-card-stat--hp",
-                damageBurstKey > 0 && "hand-card-stat--damaged"
-              )}
+              className="hand-card-stat hand-card-stat--hp"
               animateValue
               valuePulseKey={damageBurstKey}
             />
@@ -114,13 +109,6 @@ export const UnitCard = memo(
               <CardStatIcon kind="attack" value={atk} size="sm" />
               <CardStatIcon kind="hp" value={hp} size="sm" />
             </div>
-          </>
-        )}
-
-        {showHit && (
-          <>
-            <div className="attack-hit-burst pointer-events-none absolute inset-0 z-[29] animate-hit" />
-            <div className="attack-hit-flash pointer-events-none absolute inset-0 z-30 animate-hit" />
           </>
         )}
 
@@ -147,14 +135,14 @@ export const UnitCard = memo(
           isEnemy ? "border-rose-700/70" : "cursor-pointer border-sky-600/70",
           selected && !lane && "scale-105 ring-2 ring-amber-400 shadow-lg shadow-amber-400/30",
           selected && lane && "ring-2 ring-amber-400 shadow-lg shadow-amber-400/30",
-          dying && "opacity-30 blur-[1px]",
-          dying && !lane && "scale-95 transition-all duration-1000",
-          dying && lane && "transition-opacity duration-1000",
+          dying && "opacity-30",
+          dying && !lane && "blur-[1px] scale-95 transition-all duration-1000",
+          dying && lane && "transition-opacity duration-500",
           className
         )}
       >
         {lane ? (
-          <div className="unit-card-combat-layer absolute inset-0 overflow-hidden">{inner}</div>
+          <div className="unit-card-combat-layer absolute inset-0">{inner}</div>
         ) : (
           inner
         )}

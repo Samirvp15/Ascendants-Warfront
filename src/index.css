@@ -841,6 +841,11 @@ body {
   transition: none !important;
 }
 
+.unit-card-lane-shell.unit-card--combat-anim {
+  overflow: visible !important;
+  z-index: 25;
+}
+
 .unit-card-lane-shell {
   transition:
     opacity 1s ease,
@@ -849,13 +854,29 @@ body {
 }
 
 .unit-card-combat-layer {
+  overflow: hidden;
   transform: translate3d(0, 0, 0) scale(1);
   transform-origin: center center;
   backface-visibility: hidden;
 }
 
 .unit-card--combat-anim .unit-card-combat-layer {
-  will-change: transform;
+  overflow: visible;
+  will-change: transform, opacity;
+}
+
+/* Let lunging units paint across lane halves and frame edges during combat */
+.absolute-frame-anchor:has(.unit-card--combat-anim) {
+  overflow: visible;
+  z-index: 4;
+}
+
+.absolute-frame-anchor:has(.unit-card--combat-anim) > .absolute.inset-0 {
+  overflow: visible;
+}
+
+.absolute-frame-anchor:has(.unit-card--combat-anim) > .absolute.inset-0 > .min-h-0.flex-1 {
+  overflow: visible;
 }
 
 .damage-particles__spark,
