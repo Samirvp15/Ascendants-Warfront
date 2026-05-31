@@ -39,8 +39,6 @@ export function HandCard({
   const isHealNexus = card.effect === "heal_nexus";
   const isDamageNexus = card.effect === "damage_nexus";
   const autoCastable = isHealNexus || isDamageNexus;
-  const spellStatKind =
-    isDamageNexus || card.effect === "damage" ? ("attack" as const) : ("hp" as const);
   const centeredName = cardUsesCenteredName(card.id);
   const customArt = cardHasCustomArt(card.id);
   const artSrc = getCardImageSrc(card.id);
@@ -94,7 +92,7 @@ export function HandCard({
             className="hand-card-stat hand-card-stat--mana"
           />
 
-          {isUnit ? (
+          {isUnit && (
             <>
               <CardStatIcon
                 kind="attack"
@@ -104,16 +102,6 @@ export function HandCard({
               />
               <CardStatIcon kind="hp" value={card.hp ?? 0} size="xs" className="hand-card-stat hand-card-stat--hp" />
             </>
-          ) : (
-            <CardStatIcon
-              kind={spellStatKind}
-              value={card.value ?? 0}
-              size="xs"
-              className={cn(
-                "hand-card-stat",
-                spellStatKind === "attack" ? "hand-card-stat--attack" : "hand-card-stat--hp"
-              )}
-            />
           )}
 
           <div className="hand-card-type absolute right-[3%] top-[3%] z-10 rounded border border-white/20 bg-black/65 px-1 py-0.5 font-bold uppercase tracking-wider text-white/90">
@@ -136,14 +124,10 @@ export function HandCard({
 
           <div className="relative z-10 mt-auto p-1.5">
             {!centeredName && <CardNameBadge name={card.name} className="mb-0.5" />}
-            {isUnit ? (
+            {isUnit && (
               <div className="flex items-end justify-between gap-0.5">
                 <CardStatIcon kind="attack" value={card.atk ?? 0} size="sm" />
                 <CardStatIcon kind="hp" value={card.hp ?? 0} size="sm" />
-              </div>
-            ) : (
-              <div className="flex justify-center">
-                <CardStatIcon kind={spellStatKind} value={card.value ?? 0} size="sm" />
               </div>
             )}
           </div>
