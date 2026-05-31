@@ -1,4 +1,7 @@
 import { cn } from "../../utils/cn";
+import { cardHasCustomArt, cardUsesCenteredName, getCardImageSrc } from "../../utils/cardAssets";
+import { CardArtName } from "./CardArtName";
+import { CardNameBadge } from "./CardNameBadge";
 import { CardStatIcon } from "./CardStatIcon";
 
 type UnitCardProps = {
@@ -33,6 +36,9 @@ export function UnitCard({
   lane = false,
 }: UnitCardProps) {
   const isEnemy = side === "enemy";
+  const centeredName = cardUsesCenteredName(cardId);
+  const customArt = cardHasCustomArt(cardId);
+  const artSrc = getCardImageSrc(cardId);
 
   return (
     <div
@@ -51,20 +57,27 @@ export function UnitCard({
     >
       <div className="absolute inset-0 z-0">
         <img
-          src={`/images/card_${cardId}.jpg`}
+          src={artSrc}
           alt={name}
-          className="h-full w-full object-cover opacity-80"
+          className={cn(
+            "h-full w-full",
+            customArt ? "object-fill opacity-100" : "object-cover opacity-80"
+          )}
           onError={(ev) => {
             (ev.target as HTMLImageElement).style.display = "none";
           }}
         />
-        <div
-          className={cn(
-            "absolute inset-0 bg-gradient-to-t via-transparent to-transparent",
-            isEnemy ? "from-rose-950/95 via-rose-900/40" : "from-sky-950/95 via-sky-900/40"
-          )}
-        />
+        {!customArt && (
+          <div
+            className={cn(
+              "absolute inset-0 bg-gradient-to-t via-transparent to-transparent",
+              isEnemy ? "from-rose-950/95 via-rose-900/40" : "from-sky-950/95 via-sky-900/40"
+            )}
+          />
+        )}
       </div>
+
+      {centeredName && <CardArtName name={name} />}
 
       {lane ? (
         <>
@@ -76,21 +89,19 @@ export function UnitCard({
           />
           <CardStatIcon kind="hp" value={hp} size="xs" className="hand-card-stat hand-card-stat--hp" />
 
-          <div className="hand-card-footer absolute z-10">
-            <div className="card-nameplate px-1 py-0.5 text-center">
-              <div className="hand-card-name font-display truncate font-bold text-amber-50">{name}</div>
+          {!centeredName && (
+            <div className="hand-card-footer absolute z-10">
+              <CardNameBadge name={name} />
             </div>
-          </div>
+          )}
         </>
       ) : (
         <>
-          <div className="relative z-10 p-2">
-            <div className="card-nameplate px-2 py-1 text-center">
-              <div className="font-display text-[11px] font-bold tracking-wide text-amber-50 drop-shadow">
-                {name}
-              </div>
+          {!centeredName && (
+            <div className="relative z-10 flex justify-center p-2">
+              <CardNameBadge name={name} />
             </div>
-          </div>
+          )}
 
           <div className="relative z-10 mt-auto flex items-end justify-between p-2">
             <CardStatIcon kind="attack" value={atk} size="sm" />

@@ -1,4 +1,7 @@
 import { cn } from "../../utils/cn";
+import { cardHasCustomArt, cardUsesCenteredName, getCardImageSrc } from "../../utils/cardAssets";
+import { CardArtName } from "./CardArtName";
+import { CardNameBadge } from "./CardNameBadge";
 import { CardStatIcon } from "./CardStatIcon";
 
 type HandCardData = {
@@ -38,6 +41,9 @@ export function HandCard({
   const autoCastable = isHealNexus || isDamageNexus;
   const spellStatKind =
     isDamageNexus || card.effect === "damage" ? ("attack" as const) : ("hp" as const);
+  const centeredName = cardUsesCenteredName(card.id);
+  const customArt = cardHasCustomArt(card.id);
+  const artSrc = getCardImageSrc(card.id);
 
   return (
     <button
@@ -62,15 +68,22 @@ export function HandCard({
     >
       <div className="absolute inset-0">
         <img
-          src={`/images/card_${card.id}.jpg`}
+          src={artSrc}
           alt={card.name}
-          className="h-full w-full object-cover opacity-75 transition-opacity group-hover:opacity-90"
+          className={cn(
+            "h-full w-full transition-opacity",
+            customArt ? "object-fill opacity-100" : "object-cover opacity-75 group-hover:opacity-90"
+          )}
           onError={(e) => {
             (e.target as HTMLImageElement).style.display = "none";
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/55 to-transparent" />
+        {!customArt && (
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/55 to-transparent" />
+        )}
       </div>
+
+      {centeredName && <CardArtName name={card.name} />}
 
       {compact ? (
         <>
@@ -107,11 +120,11 @@ export function HandCard({
             {isDamageNexus ? "💥nex" : isHealNexus ? "♥nex" : isUnit ? "unit" : "spell"}
           </div>
 
-          <div className="hand-card-footer absolute z-10">
-            <div className="card-nameplate px-1 py-0.5 text-center">
-              <div className="hand-card-name font-display truncate font-bold text-amber-50">{card.name}</div>
+          {!centeredName && (
+            <div className="hand-card-footer absolute z-10">
+              <CardNameBadge name={card.name} />
             </div>
-          </div>
+          )}
         </>
       ) : (
         <>
@@ -122,9 +135,7 @@ export function HandCard({
           </div>
 
           <div className="relative z-10 mt-auto p-1.5">
-            <div className="card-nameplate mb-0.5 px-1 py-0.5 text-center">
-              <div className="font-display truncate text-[9px] font-bold text-amber-50">{card.name}</div>
-            </div>
+            {!centeredName && <CardNameBadge name={card.name} className="mb-0.5" />}
             {isUnit ? (
               <div className="flex items-end justify-between gap-0.5">
                 <CardStatIcon kind="attack" value={card.atk ?? 0} size="sm" />

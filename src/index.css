@@ -60,7 +60,8 @@ body {
   --arena-gap: clamp(4px, 0.55vh, 10px);
   --lane-inset-x: 2.5%;
   --lane-inset-y: 1.75%;
-  --lane-card-scale: 0.72;
+  --lane-card-scale: 0.84;
+  --lane-card-width-scale: 0.60;
   --strike-btn-arena-size: min(calc(var(--hand-h) * 1.32), 11.8rem);
   --strike-btn-size: var(--strike-btn-arena-size);
   --hand-strike-right: calc(var(--strike-btn-arena-size) * -0.84);
@@ -256,6 +257,8 @@ body {
   left: 18%;
   right: 18%;
   bottom: 32%;
+  display: flex;
+  justify-content: center;
   pointer-events: none;
 }
 
@@ -272,11 +275,69 @@ body {
   font-size: 0.62em;
 }
 
+.card-name-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 4.75rem;
+  min-height: 1.58rem;
+  max-width: 100%;
+  padding: 0.34em 0.82em;
+  border: none;
+  background: transparent url("/images/header_button.png") center / 100% 100% no-repeat;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.82rem;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: #fef3c7;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.65));
+}
+
+.card-art-name {
+  left: 50%;
+  top: 62%;
+  display: flex;
+  justify-content: center;
+  max-width: 100%;
+  transform: translate(-50%, -50%);
+}
+
+.hand-deck-zone .hand-card-compact .card-art-name .card-name-badge {
+  min-width: 4.4em;
+  min-height: 1.62em;
+  font-size: 0.68em;
+  padding: 0.36em 0.92em;
+}
+
+.hand-deck-zone .hand-card-compact .hand-card-footer .card-name-badge {
+  min-width: 4.2em;
+  min-height: 1.55em;
+  font-size: 0.92em;
+}
+
+.lane-unit-card .card-art-name .card-name-badge {
+  font-size: clamp(0.82rem, 5cqi, 1.18rem);
+  min-width: clamp(4.2rem, 26cqi, 6.4rem);
+  min-height: clamp(1.4rem, 8.5cqi, 2rem);
+  padding: 0.36em 0.95em;
+}
+
+.lane-unit-card .hand-card-footer .card-name-badge {
+  font-size: clamp(0.76rem, 4.4cqi, 1.05rem);
+}
+
 .lane-unit-card {
   align-self: center;
-  width: calc(100% * var(--lane-card-scale));
+  width: calc(100% * var(--lane-card-width-scale, var(--lane-card-scale)));
   height: calc(100% * var(--lane-card-scale));
-  max-width: calc(100% * var(--lane-card-scale));
+  max-width: calc(100% * var(--lane-card-width-scale, var(--lane-card-scale)));
   max-height: calc(100% * var(--lane-card-scale));
   margin: auto;
   font-size: var(--hand-card-font);
@@ -303,6 +364,8 @@ body {
   left: 18%;
   right: 18%;
   bottom: 32%;
+  display: flex;
+  justify-content: center;
   pointer-events: none;
 }
 
@@ -317,9 +380,9 @@ body {
 
 .lane-empty-slot {
   align-self: center;
-  width: calc(100% * var(--lane-card-scale));
+  width: calc(100% * var(--lane-card-width-scale, var(--lane-card-scale)));
   height: calc(100% * var(--lane-card-scale));
-  max-width: calc(100% * var(--lane-card-scale));
+  max-width: calc(100% * var(--lane-card-width-scale, var(--lane-card-scale)));
   max-height: calc(100% * var(--lane-card-scale));
   margin: auto;
   font-size: clamp(7px, 2.2cqi, 10px);
