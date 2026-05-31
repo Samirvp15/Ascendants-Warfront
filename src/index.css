@@ -360,6 +360,29 @@ body {
   transform: translate(6%, 6%);
 }
 
+@keyframes lane-hp-stat-shake {
+  0%,
+  100% {
+    transform: translate(6%, 6%) scale(1);
+  }
+  20% {
+    transform: translate(2%, 6%) scale(1.06);
+  }
+  40% {
+    transform: translate(10%, 6%) scale(1.06);
+  }
+  60% {
+    transform: translate(4%, 6%) scale(1.03);
+  }
+  80% {
+    transform: translate(8%, 6%) scale(1);
+  }
+}
+
+.lane-unit-card .hand-card-stat--hp.hand-card-stat--damaged {
+  animation: lane-hp-stat-shake 0.65s ease-out;
+}
+
 .lane-unit-card .hand-card-footer {
   left: 18%;
   right: 18%;
@@ -424,6 +447,25 @@ body {
     0 1px 2px rgba(0, 0, 0, 0.95);
   pointer-events: none;
   user-select: none;
+}
+
+.card-stat-icon__value-inner {
+  display: block;
+}
+
+@keyframes stat-value-pulse {
+  0% {
+    color: #fca5a5;
+    transform: scale(1.35);
+  }
+  100% {
+    color: #fffbeb;
+    transform: scale(1);
+  }
+}
+
+.card-stat-icon__value-inner--pulse {
+  animation: stat-value-pulse 0.62s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .card-stat-icon--xs {
@@ -765,4 +807,60 @@ body {
       inset 0 0 0 1px rgba(245, 158, 11, 0.6),
       0 0 20px rgba(245, 158, 11, 0.35);
   }
+}
+
+@keyframes hitFlash {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+.animate-hit {
+  animation: hitFlash 0.5s ease-out;
+}
+
+.attack-hit-flash {
+  background: rgba(255, 255, 255, 0.55);
+  mix-blend-mode: screen;
+}
+
+.attack-hit-burst {
+  background: radial-gradient(circle at center, rgba(255, 220, 120, 0.65) 0%, transparent 68%);
+}
+
+.unit-card--combat-anim {
+  transition: none !important;
+}
+
+.unit-card-lane-shell {
+  transition:
+    opacity 1s ease,
+    filter 1s ease,
+    box-shadow 0.3s ease;
+}
+
+.unit-card-combat-layer {
+  transform: translate3d(0, 0, 0) scale(1);
+  transform-origin: center center;
+  backface-visibility: hidden;
+}
+
+.unit-card--combat-anim .unit-card-combat-layer {
+  will-change: transform;
+}
+
+.damage-particles__spark,
+.damage-particles__value,
+.damage-particles__ring {
+  pointer-events: none;
+  will-change: transform, opacity;
 }

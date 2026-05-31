@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AbsoluteFrame, AbsoluteFrameAnchor } from "./components/layout/AbsoluteFrame";
 import { EnemyStrip } from "./components/ui/EnemyStrip";
 import { GameControls, GameSidebar } from "./components/ui/GameHeader";
@@ -6,6 +6,7 @@ import { HandCard } from "./components/ui/HandCard";
 import { MainDeckShop } from "./components/ui/MainDeckShop";
 import { PlayerHandDeck } from "./components/ui/PlayerHandDeck";
 import { EmptySlot, UnitCard } from "./components/ui/UnitCard";
+import { playLaneClash, resetAllCombatUnits } from "./utils/attackAnimation";
 import { cn } from "./utils/cn";
 
 // ---------- TYPES ----------
@@ -135,11 +136,11 @@ function computeShopRefill(
 }
 
 const T = {
-  CLASH_SHOW: 1400,
-  DEATHS_SHOW: 1000,
-  NEXUS_SHOW: 1600,
-  REWARDS_SHOW: 1800,
-  ENEMY_DELAY: 1000,
+  CLASH_LANE_GAP: 300,
+  DEATHS_SHOW: 1200,
+  NEXUS_SHOW: 2200,
+  REWARDS_SHOW: 2200,
+  ENEMY_DELAY: 1200,
 };
 
 // ---------- HELPERS ----------
@@ -222,6 +223,13 @@ export default function App() {
     pNexusDmg: number; eNexusDmg: number;
     totalPlayerDamage: number; totalEnemyDamage: number;
   } | null>(null);
+  const [unitDamageBursts, setUnitDamageBursts] = useState<
+    Record<string, { key: number; amount: number }>
+  >({});
+  const [hits, setHits] = useState<{ id: string; targetId: string }[]>([]);
+
+  const unitRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const combatRunningRef = useRef(false);
 
   const [displayPlayerNexus, setDisplayPlayerNexus] = useState(STARTING_NEXUS);
   const [displayEnemyNexus, setDisplayEnemyNexus] = useState(STARTING_NEXUS);
@@ -237,6 +245,23 @@ export default function App() {
   const mainDeckRef = useRef(mainDeck);
   shopEntriesRef.current = shopEntries;
   mainDeckRef.current = mainDeck;
+
+  const triggerHitEffect = useCallback((target: HTMLElement) => {
+    const targetId = target.dataset.unitId;
+    if (!targetId) return;
+    const id = Math.random().toString();
+    setHits((prev) => [...prev, { id, targetId }]);
+    setTimeout(() => {
+      setHits((prev) => prev.filter((h) => h.id !== id));
+    }, 520);
+  }, []);
+
+  const pulseUnitDamage = useCallback((unitId: string, amount: number) => {
+    setUnitDamageBursts((prev) => ({
+      ...prev,
+      [unitId]: { key: (prev[unitId]?.key ?? 0) + 1, amount },
+    }));
+  }, []);
 
   function applyShopPurchase(boughtUid: string, ensureUnit = false) {
     const { nextShop, nextMain } = computeShopAfterPurchase(
@@ -297,6 +322,10 @@ export default function App() {
     setPhase("playerTurn");
     setCombatStep("idle");
     setCombatData(null);
+    setUnitDamageBursts({});
+    setHits([]);
+    unitRefs.current = {};
+    combatRunningRef.current = false;
     setRound(1);
     setPlayerMana(1); setPlayerMaxMana(1);
     setEnemyMana(1); setEnemyMaxMana(1);
@@ -611,40 +640,117 @@ export default function App() {
 
   // ========== COMBAT ==========
   useEffect(() => {
-    if (phase !== "combat" || combatStep !== "clash" || winner || combatData) return;
-    const pDmg: (number | null)[] = [null, null, null];
-    const eDmg: (number | null)[] = [null, null, null];
-    let pN = 0, eN = 0, tP = 0, tE = 0;
-    for (const l of LANES) {
-      const p = playerBoard[l], e = enemyBoard[l];
-      if (p && e) { pDmg[l] = e.atk; eDmg[l] = p.atk; tP += p.atk; tE += e.atk; }
-      else if (p && !e) { eN += p.atk; tP += p.atk; }
-      else if (!p && e) { pN += e.atk; tE += e.atk; }
-    }
-    setCombatData({ pDmg, eDmg, pNexusDmg: pN, eNexusDmg: eN, totalPlayerDamage: tP, totalEnemyDamage: tE });
-    const t = setTimeout(() => setCombatStep("deaths"), T.CLASH_SHOW);
-    return () => clearTimeout(t);
+    if (phase !== "combat" || combatStep !== "clash" || winner || combatRunningRef.current) return;
+
+    combatRunningRef.current = true;
+    setUnitDamageBursts({});
+
+    let cancelled = false;
+
+    (async () => {
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      if (cancelled) return;
+
+      const pDmg: (number | null)[] = [null, null, null];
+      const eDmg: (number | null)[] = [null, null, null];
+      let pN = 0;
+      let eN = 0;
+      let tP = 0;
+      let tE = 0;
+
+      for (const l of LANES) {
+        const p = playerBoard[l];
+        const e = enemyBoard[l];
+        if (p && !e) {
+          eN += p.atk;
+          tP += p.atk;
+        } else if (!p && e) {
+          pN += e.atk;
+          tE += e.atk;
+        }
+      }
+
+      let pb = [...playerBoard];
+      let eb = [...enemyBoard];
+
+      // Resolve clashes left → right (lane 0, 1, 2)
+      for (const l of LANES) {
+        const pSnap = pb[l];
+        const eSnap = eb[l];
+        if (!pSnap || !eSnap) continue;
+
+        const clashResult = await playLaneClash(
+          pSnap.id,
+          eSnap.id,
+          unitRefs,
+          triggerHitEffect,
+          async () => {
+            const nextEnemyHp = eSnap.hp - pSnap.atk;
+            const nextPlayerHp = pSnap.hp - eSnap.atk;
+            const playerDead = nextPlayerHp <= 0;
+            const enemyDead = nextEnemyHp <= 0;
+
+            eb[l] = enemyDead ? { ...eSnap, hp: 0 } : { ...eSnap, hp: nextEnemyHp };
+            pb[l] = playerDead ? { ...pSnap, hp: 0 } : { ...pSnap, hp: nextPlayerHp };
+            eDmg[l] = pSnap.atk;
+            pDmg[l] = eSnap.atk;
+            tP += pSnap.atk;
+            tE += eSnap.atk;
+
+            setEnemyBoard([...eb]);
+            setPlayerBoard([...pb]);
+            pulseUnitDamage(eSnap.id, pSnap.atk);
+            pulseUnitDamage(pSnap.id, eSnap.atk);
+
+            await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+            return { playerDead, enemyDead };
+          }
+        );
+        if (cancelled) return;
+
+        if (clashResult.enemyDead) eb[l] = null;
+        if (clashResult.playerDead) pb[l] = null;
+        setEnemyBoard([...eb]);
+        setPlayerBoard([...pb]);
+
+        resetAllCombatUnits(unitRefs);
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+        await new Promise((r) => setTimeout(r, T.CLASH_LANE_GAP));
+      }
+
+      if (cancelled) return;
+
+      resetAllCombatUnits(unitRefs);
+      setCombatData({
+        pDmg,
+        eDmg,
+        pNexusDmg: pN,
+        eNexusDmg: eN,
+        totalPlayerDamage: tP,
+        totalEnemyDamage: tE,
+      });
+      setCombatStep("deaths");
+    })().finally(() => {
+      combatRunningRef.current = false;
+    });
+
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line
-  }, [phase, combatStep]);
+  }, [phase, combatStep, triggerHitEffect, pulseUnitDamage]);
 
   useEffect(() => {
     if (combatStep !== "deaths" || !combatData) return;
-    const { pDmg, eDmg } = combatData;
-    const pb = [...playerBoard], eb = [...enemyBoard];
-    for (const l of LANES) {
-      const p = pb[l], e = eb[l];
-      if (p && e) {
-        pb[l] = p.hp - (pDmg[l] ?? 0) > 0 ? { ...p, hp: p.hp - (pDmg[l] ?? 0) } : null;
-        eb[l] = e.hp - (eDmg[l] ?? 0) > 0 ? { ...e, hp: e.hp - (eDmg[l] ?? 0) } : null;
-      }
-    }
-    setPlayerBoard(pb); setEnemyBoard(eb);
-    setPlayerNexus(Math.max(0, playerNexus - combatData.pNexusDmg));
-    setEnemyNexus(Math.max(0, enemyNexus - combatData.eNexusDmg));
-    const t = setTimeout(() => setCombatStep("nexus"), T.DEATHS_SHOW);
+    const t = setTimeout(() => {
+      setPlayerBoard((prev) => prev.map((u) => (u && u.hp <= 0 ? null : u)));
+      setEnemyBoard((prev) => prev.map((u) => (u && u.hp <= 0 ? null : u)));
+      setPlayerNexus((prev) => Math.max(0, prev - combatData.pNexusDmg));
+      setEnemyNexus((prev) => Math.max(0, prev - combatData.eNexusDmg));
+      setCombatStep("nexus");
+    }, T.DEATHS_SHOW);
     return () => clearTimeout(t);
-    // eslint-disable-next-line
-  }, [combatStep]);
+  }, [combatStep, combatData]);
 
   useEffect(() => {
     if (combatStep !== "nexus" || !combatData) return;
@@ -735,6 +841,8 @@ export default function App() {
       setPhase("playerTurn");
       setCombatStep("idle");
       setCombatData(null);
+      setUnitDamageBursts({});
+      setHits([]);
       setBusy(false);
     }, T.REWARDS_SHOW);
     return () => clearTimeout(t);
@@ -764,6 +872,10 @@ export default function App() {
     setNewlyBoughtUid(null);
     setRoundResult(null);
     setCombatData(null);
+    setUnitDamageBursts({});
+    setHits([]);
+    unitRefs.current = {};
+    combatRunningRef.current = false;
     setCombatStep("idle");
     setRefreshes(3);
     initMatch();
@@ -826,9 +938,8 @@ export default function App() {
                   ((selectedCard?.type === "unit" && p === null) || selectedCard?.type === "spell");
                 const isMoveSource = p && movingUnitId === p.id;
                 const isMoveTarget = movingUnitId !== null && !isMoveSource && phase === "playerTurn" && !busy;
-                const pDmg = combatData?.pDmg[lane] ?? null,
-                  eDmg = combatData?.eDmg[lane] ?? null;
-                const showDmg = combatStep === "clash" || combatStep === "deaths";
+                const enemyBurst = e ? unitDamageBursts[e.id] : undefined;
+                const playerBurst = p ? unitDamageBursts[p.id] : undefined;
 
                 const handleLaneClick = () => {
                   if (validTarget && selectedCard) {
@@ -861,14 +972,20 @@ export default function App() {
                       <div className="@container flex min-h-0 flex-1 items-center justify-center">
                         {e ? (
                           <UnitCard
+                            ref={(el) => {
+                              if (el) unitRefs.current[e.id] = el;
+                              else delete unitRefs.current[e.id];
+                            }}
+                            unitId={e.id}
                             cardId={e.cardId}
                             name={e.name}
                             atk={e.atk}
                             hp={e.hp}
                             side="enemy"
                             lane
-                            showDmg={showDmg}
-                            dmg={eDmg}
+                            damageBurstKey={enemyBurst?.key ?? 0}
+                            damageAmount={enemyBurst?.amount ?? 0}
+                            showHit={hits.some((h) => h.targetId === e.id)}
                             dying={combatStep === "deaths" && e.hp <= 0}
                           />
                         ) : (
@@ -900,14 +1017,20 @@ export default function App() {
                       <div className="@container flex min-h-0 flex-1 items-center justify-center">
                         {p ? (
                           <UnitCard
+                            ref={(el) => {
+                              if (el) unitRefs.current[p.id] = el;
+                              else delete unitRefs.current[p.id];
+                            }}
+                            unitId={p.id}
                             cardId={p.cardId}
                             name={p.name}
                             atk={p.atk}
                             hp={p.hp}
                             side="player"
                             lane
-                            showDmg={showDmg}
-                            dmg={pDmg}
+                            damageBurstKey={playerBurst?.key ?? 0}
+                            damageAmount={playerBurst?.amount ?? 0}
+                            showHit={hits.some((h) => h.targetId === p.id)}
                             dying={combatStep === "deaths" && p.hp <= 0}
                             selected={Boolean(isMoveSource)}
                             moving={Boolean(isMoveSource)}

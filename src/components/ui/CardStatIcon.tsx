@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { cn } from "../../utils/cn";
 
 const STAT_IMAGES = {
@@ -13,9 +14,20 @@ type CardStatIconProps = {
   value: number | string;
   size?: "xs" | "sm" | "md";
   className?: string;
+  animateValue?: boolean;
+  valuePulseKey?: number;
 };
 
-export function CardStatIcon({ kind, value, size = "md", className }: CardStatIconProps) {
+export const CardStatIcon = memo(function CardStatIcon({
+  kind,
+  value,
+  size = "md",
+  className,
+  animateValue = false,
+  valuePulseKey = 0,
+}: CardStatIconProps) {
+  const pulse = animateValue && valuePulseKey > 0;
+
   return (
     <span
       className={cn(
@@ -28,7 +40,14 @@ export function CardStatIcon({ kind, value, size = "md", className }: CardStatIc
       aria-hidden
     >
       <img src={STAT_IMAGES[kind]} alt="" draggable={false} className="card-stat-icon__img" />
-      <span className="card-stat-icon__value tabular-nums">{value}</span>
+      <span className="card-stat-icon__value tabular-nums">
+        <span
+          key={pulse ? `${value}-${valuePulseKey}` : undefined}
+          className={cn("card-stat-icon__value-inner", pulse && "card-stat-icon__value-inner--pulse")}
+        >
+          {value}
+        </span>
+      </span>
     </span>
   );
-}
+});
