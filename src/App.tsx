@@ -7,6 +7,7 @@ import { MainDeckShop } from "./components/ui/MainDeckShop";
 import { PlayerHandDeck } from "./components/ui/PlayerHandDeck";
 import { EmptySlot, UnitCard } from "./components/ui/UnitCard";
 import { playLaneClash, playUnopposedAttack, resetAllCombatUnits } from "./utils/attackAnimation";
+import { clearAllLaneVfx } from "./utils/laneAttackVfx";
 import { cn } from "./utils/cn";
 
 // ---------- TYPES ----------
@@ -718,6 +719,7 @@ export default function App() {
       if (cancelled) return;
 
       resetAllCombatUnits(unitRefs);
+      clearAllLaneVfx();
       setCombatData({
         pDmg,
         eDmg,

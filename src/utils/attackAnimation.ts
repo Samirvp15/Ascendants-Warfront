@@ -1,4 +1,5 @@
 import type { RefObject } from "react";
+import { playLaneImpactVfx } from "./laneAttackVfx";
 
 type UnitRefs = RefObject<Record<string, HTMLDivElement | null>>;
 
@@ -14,10 +15,10 @@ const LUNGE_SCALE = 1.06;
 const TIMING = {
   /** Faceoff pause before both units lunge */
   preClash: 520,
-  lungeOut: 380,
+  lungeOut: 150,
   /** Hold at impact while HP discount plays */
-  lifeDiscount: 520,
-  lungeBack: 340,
+  lifeDiscount: 200,
+  lungeBack: 80,
   defeatFade: 360,
 } as const;
 
@@ -225,7 +226,11 @@ export async function playLaneClash(
 
     await Promise.all([playAttackLunge(playerLayer, pLunge), playAttackLunge(enemyLayer, eLunge)]);
 
-    impactResult = await onLifeDiscount();
+    const [, impact] = await Promise.all([
+      playLaneImpactVfx(player, "clash"),
+      onLifeDiscount(),
+    ]);
+    impactResult = impact;
     await wait(TIMING.lifeDiscount);
 
     const playerDefeated = impactResult.playerHp === 0;
@@ -265,7 +270,7 @@ export async function playUnopposedAttack(
   try {
     await wait(TIMING.preClash);
     await playAttackLunge(layer, lunge);
-    await onImpact?.();
+    await Promise.all([playLaneImpactVfx(unit, "strike"), onImpact?.()]);
     await wait(TIMING.lifeDiscount);
     await playReturnHome(layer, lunge);
   } finally {
