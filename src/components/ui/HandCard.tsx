@@ -46,6 +46,7 @@ export function HandCard({
   return (
     <button
       type="button"
+      data-hand-card={card.uid}
       onClick={onClick}
       disabled={!clickable}
       title={
@@ -61,7 +62,7 @@ export function HandCard({
         compact && selected && "-translate-y-1 scale-105 border-amber-400 shadow-lg shadow-amber-400/40",
         !compact && selected && "-translate-y-2 scale-105 border-amber-400 shadow-lg shadow-amber-400/40",
         clickable ? "cursor-pointer hover:-translate-y-1 hover:scale-[1.02]" : "cursor-not-allowed opacity-50",
-        newlyBought && "animate-bounce"
+        newlyBought && "hand-card--newly-bought"
       )}
     >
       <div className="absolute inset-0">

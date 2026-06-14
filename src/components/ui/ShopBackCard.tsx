@@ -10,7 +10,7 @@ type ShopBackCardProps = {
   entry: ShopEntry;
   canAfford: boolean;
   canBuy: boolean;
-  onBuy: () => void;
+  onBuy: (sourceEl: HTMLButtonElement) => void;
   compact?: boolean;
 };
 
@@ -20,7 +20,8 @@ export function ShopBackCard({ entry, canAfford, canBuy, onBuy }: ShopBackCardPr
   return (
     <button
       type="button"
-      onClick={onBuy}
+      data-shop-entry={entry.uid}
+      onClick={(e) => onBuy(e.currentTarget)}
       disabled={!enabled}
       title={`Buy mystery card for ${entry.def.price} gold`}
       className={cn(

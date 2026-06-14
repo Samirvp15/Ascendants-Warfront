@@ -1,5 +1,7 @@
 import { cn } from "../../utils/cn";
 import { AbsoluteFrame } from "../layout/AbsoluteFrame";
+import { FrameStatDisplay } from "./FrameStatDisplay";
+import { MysteryDeckCard } from "./MysteryDeckCard";
 
 type EnemyStripProps = {
   enemyMana: number;
@@ -12,6 +14,8 @@ type EnemyStripProps = {
   activeTurn: boolean;
   className?: string;
   embedded?: boolean;
+  deckCardUids?: string[];
+  newlyBoughtUid?: string | null;
 };
 
 export function EnemyStrip({
@@ -25,6 +29,8 @@ export function EnemyStrip({
   activeTurn,
   className = "",
   embedded = false,
+  deckCardUids = [],
+  newlyBoughtUid = null,
 }: EnemyStripProps) {
   return (
     <AbsoluteFrame
@@ -37,62 +43,46 @@ export function EnemyStrip({
         activeTurn && "ring-1 ring-rose-400/40",
         className
       )}
-      bgStyle={embedded ? undefined : { top: "-4%", bottom: "-10%", height: "auto" }}
-      contentClassName="grid grid-cols-[10%_1fr_13%] grid-rows-[48%_52%] px-[2.8%] pb-[8.5%] pt-[5.5%]"
+      contentClassName="enemy-strip-content"
     >
-      <div className="row-span-2 flex items-center justify-center">
-        <span className="text-[0.95em] leading-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">👹</span>
+      <div className="enemy-deck-zone">
+        <div className="enemy-deck-zone__deck">
+          {deckCardUids.length > 0 ? (
+            deckCardUids.map((uid, index) => (
+              <MysteryDeckCard
+                key={uid}
+                newlyBought={newlyBoughtUid === uid}
+                style={{
+                  zIndex: newlyBoughtUid === uid ? deckCardUids.length + 10 : index + 1,
+                }}
+              />
+            ))
+          ) : (
+            <span className="enemy-deck-zone__empty font-display">—</span>
+          )}
+        </div>
       </div>
 
-      <div className="flex items-start self-start pl-[0.5%] pt-[2%]">
-        <span className="font-display text-[0.62em] font-bold leading-tight text-rose-100 drop-shadow-[0_1px_4px_rgba(0,0,0,1)]">
-          Enemy
-        </span>
-        <span className="ml-[0.35em] text-[0.56em] leading-tight text-slate-300 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
-          · {enemyDeckCount}
-        </span>
+      <div className="enemy-strip-stats">
+        <FrameStatDisplay
+          kind="mana"
+          value={enemyMana}
+          max={enemyMaxMana}
+          flash={flashMana}
+          className="frame-stat--enemy-mana"
+        />
+        <FrameStatDisplay
+          kind="nexus"
+          value={displayEnemyNexus}
+          max={nexusMax}
+          flash={flashNexus}
+          className="frame-stat--enemy-nexus"
+        />
       </div>
 
-      <div className="flex items-start justify-between px-[6%] pt-[10%]">
-        <span
-          className={cn(
-            "tabular-nums text-[0.58em] font-bold leading-none text-blue-100 drop-shadow-[0_1px_4px_rgba(0,0,0,1)]",
-            flashMana && "animate-pulse"
-          )}
-        >
-          {enemyMana}
-        </span>
-        <span
-          className={cn(
-            "tabular-nums text-[0.58em] font-bold leading-none text-red-100 drop-shadow-[0_1px_4px_rgba(0,0,0,1)]",
-            flashNexus && "animate-pulse"
-          )}
-        >
-          {displayEnemyNexus}
-        </span>
-      </div>
-
-      <div className="flex items-end pb-[4%] pl-[0.5%]">
-        <span
-          className={cn(
-            "tabular-nums text-[0.62em] font-bold leading-none text-blue-100 drop-shadow-[0_1px_4px_rgba(0,0,0,1)]",
-            flashMana && "animate-pulse"
-          )}
-        >
-          ◆ {enemyMana}/{enemyMaxMana}
-        </span>
-      </div>
-
-      <div className="flex items-end justify-end pb-[4%] pr-[3%]">
-        <span
-          className={cn(
-            "tabular-nums text-[0.62em] font-bold leading-none text-red-100 drop-shadow-[0_1px_4px_rgba(0,0,0,1)]",
-            flashNexus && "animate-pulse"
-          )}
-        >
-          ♥ {displayEnemyNexus}/{nexusMax}
-        </span>
-      </div>
+      {enemyDeckCount > 0 && (
+        <span className="enemy-strip-count font-display tabular-nums">{enemyDeckCount}</span>
+      )}
     </AbsoluteFrame>
   );
 }

@@ -16,6 +16,8 @@ type UnitCardProps = {
   damageBurstKey?: number;
   damageAmount?: number;
   dying?: boolean;
+  deploying?: boolean;
+  placed?: boolean;
   selected?: boolean;
   moving?: boolean;
   onClick?: (ev: React.MouseEvent) => void;
@@ -35,6 +37,8 @@ export const UnitCard = memo(
       damageBurstKey = 0,
       damageAmount = 0,
       dying,
+      deploying,
+      placed,
       selected,
       moving,
       onClick,
@@ -135,6 +139,8 @@ export const UnitCard = memo(
           isEnemy ? "border-rose-700/70" : "cursor-pointer border-sky-600/70",
           selected && !lane && "scale-105 ring-2 ring-amber-400 shadow-lg shadow-amber-400/30",
           selected && lane && "ring-2 ring-amber-400 shadow-lg shadow-amber-400/30",
+          deploying && lane && "unit-card--deploying",
+          placed && lane && (isEnemy ? "unit-card--placed-enemy" : "unit-card--placed-player"),
           dying && "opacity-30",
           dying && !lane && "blur-[1px] scale-95 transition-all duration-1000",
           dying && lane && "transition-opacity duration-500",

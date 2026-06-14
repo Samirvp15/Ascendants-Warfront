@@ -9,7 +9,7 @@ type MainDeckShopProps<T extends { uid: string; def: { price: number; type: stri
   refreshes: number;
   winner: boolean;
   onRefresh: () => void;
-  onBuy: (entry: T) => void;
+  onBuy: (entry: T, sourceEl: HTMLButtonElement) => void;
   className?: string;
 };
 
@@ -47,7 +47,7 @@ export function MainDeckShop<T extends { uid: string; def: { price: number; type
               entry={entry}
               canAfford={gold >= entry.def.price}
               canBuy={!deckFull}
-              onBuy={() => onBuy(entry)}
+              onBuy={(sourceEl) => onBuy(entry, sourceEl)}
               compact
             />
           ))}

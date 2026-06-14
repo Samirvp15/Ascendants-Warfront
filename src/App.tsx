@@ -7,7 +7,14 @@ import { MainDeckShop } from "./components/ui/MainDeckShop";
 import { PlayerHandDeck } from "./components/ui/PlayerHandDeck";
 import { EmptySlot, UnitCard } from "./components/ui/UnitCard";
 import { playLaneClash, playUnopposedAttack, resetAllCombatUnits } from "./utils/attackAnimation";
+import { getCardImageSrc } from "./utils/cardAssets";
 import { clearAllLaneVfx } from "./utils/laneAttackVfx";
+import {
+  clearLanePlacementVfx,
+  playLanePlacementVfx,
+  waitForPlacementAnimationsComplete,
+} from "./utils/lanePlacementVfx";
+import { playShopPurchaseVfx } from "./utils/shopPurchaseVfx";
 import { cn } from "./utils/cn";
 
 // ---------- TYPES ----------
@@ -239,7 +246,10 @@ export default function App() {
   const [flashMana, setFlashMana] = useState<"player" | "enemy" | null>(null);
   const [roundResult, setRoundResult] = useState<Owner | "tie" | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const [newlyBoughtUid, setNewlyBoughtUid] = useState<string | null>(null); // for reveal animation
+  const [newlyBoughtUid, setNewlyBoughtUid] = useState<string | null>(null);
+  const [enemyNewlyBoughtUid, setEnemyNewlyBoughtUid] = useState<string | null>(null);
+  const [deployingUnitIds, setDeployingUnitIds] = useState<Set<string>>(() => new Set());
+  const [placedUnitIds, setPlacedUnitIds] = useState<Set<string>>(() => new Set());
   const toastTimer = useRef<number | null>(null);
   const shopEntriesRef = useRef(shopEntries);
   const mainDeckRef = useRef(mainDeck);
@@ -251,6 +261,27 @@ export default function App() {
       ...prev,
       [unitId]: { key: (prev[unitId]?.key ?? 0) + 1, amount },
     }));
+  }, []);
+
+  const startUnitDeploy = useCallback((unitId: string) => {
+    setDeployingUnitIds((prev) => new Set(prev).add(unitId));
+  }, []);
+
+  const finishUnitDeploy = useCallback((unitId: string, withRevealFx = true) => {
+    setDeployingUnitIds((prev) => {
+      const next = new Set(prev);
+      next.delete(unitId);
+      return next;
+    });
+    if (!withRevealFx) return;
+    setPlacedUnitIds((prev) => new Set(prev).add(unitId));
+    setTimeout(() => {
+      setPlacedUnitIds((prev) => {
+        const next = new Set(prev);
+        next.delete(unitId);
+        return next;
+      });
+    }, 400);
   }, []);
 
   function applyShopPurchase(boughtUid: string, ensureUnit = false) {
@@ -322,6 +353,10 @@ export default function App() {
     setDisplayPlayerNexus(STARTING_NEXUS); setDisplayEnemyNexus(STARTING_NEXUS);
     setDisplayGold(gold);
     setSelectedCardUid(null); setWinner(null); setRoundResult(null); setBusy(false);
+    setEnemyNewlyBoughtUid(null);
+    setDeployingUnitIds(new Set());
+    setPlacedUnitIds(new Set());
+    clearLanePlacementVfx();
   }
 
   useEffect(() => { initMatch(); }, []); // eslint-disable-line
@@ -357,7 +392,33 @@ export default function App() {
     if (card.type === "unit") {
       if (playerBoard[lane] !== null) { success = false; }
       else {
-        setPlayerBoard(b => { const nb = [...b]; nb[lane] = { id: `u-${uid()}`, cardId: card.id, name: card.name, atk: card.atk ?? 0, hp: card.hp ?? 1, maxHp: card.hp ?? 1, lane, owner: "player" }; return nb; });
+        const newUnitId = `u-${uid()}`;
+        const cardArtSrc = getCardImageSrc(card.id);
+        startUnitDeploy(newUnitId);
+        setPlayerBoard((b) => {
+          const nb = [...b];
+          nb[lane] = {
+            id: newUnitId,
+            cardId: card.id,
+            name: card.name,
+            atk: card.atk ?? 0,
+            hp: card.hp ?? 1,
+            maxHp: card.hp ?? 1,
+            lane,
+            owner: "player",
+          };
+          return nb;
+        });
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            void playLanePlacementVfx({
+              side: "player",
+              lane,
+              cardArtSrc,
+              onLand: () => finishUnitDeploy(newUnitId, false),
+            });
+          });
+        });
       }
     } else if (card.effect === "damage") {
       const val = card.value ?? 0;
@@ -452,17 +513,21 @@ export default function App() {
   }
 
   // ========== SHOP: BUY CARD ==========
-  function buyFromShop(entry: ShopEntry) {
+  function buyFromShop(entry: ShopEntry, sourceEl: HTMLButtonElement) {
     if (gold < entry.def.price) { showToast(`Need ${entry.def.price}💰`); return; }
     if (deckCards.length >= MAX_DECK) { showToast(`Deck full! (${MAX_DECK})`); return; }
+
+    const sourceRect = sourceEl.getBoundingClientRect();
+    const cardArtSrc = getCardImageSrc(entry.def.id);
 
     setGold(g => g - entry.def.price);
     const newCard = makeCard(entry.def);
     setDeckCards(d => [...d, newCard]);
     applyShopPurchase(entry.uid);
     setNewlyBoughtUid(newCard.uid);
-    setTimeout(() => setNewlyBoughtUid(null), 1500);
-    showToast(`Bought ${entry.def.name}!`);
+    setTimeout(() => setNewlyBoughtUid(null), 1800);
+
+    void playShopPurchaseVfx(sourceRect, cardArtSrc, "player");
   }
 
   // ========== SHOP: REFRESH ==========
@@ -496,16 +561,24 @@ export default function App() {
   // ========== ENEMY AI ==========
   useEffect(() => {
     if (phase !== "enemyTurn" || winner) return;
+    let cancelled = false;
     const t = setTimeout(() => {
-      runEnemyAI();
-      setPhase("combat");
-      setCombatStep("clash");
+      void (async () => {
+        await runEnemyAI();
+        await waitForPlacementAnimationsComplete();
+        if (cancelled) return;
+        setPhase("combat");
+        setCombatStep("clash");
+      })();
     }, T.ENEMY_DELAY);
-    return () => clearTimeout(t);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
     // eslint-disable-next-line
   }, [phase]);
 
-  function runEnemyAI() {
+  function runEnemyAI(): Promise<void> {
     const board = [...enemyBoard];
     let mana = enemyMana;
     let pBoard = [...playerBoard];
@@ -513,6 +586,9 @@ export default function App() {
     let eDeck = [...enemyDeck];
     let eGold = enemyGold;
     const consumed: string[] = [];
+    const enemyPlacements: { lane: number; unitId: string }[] = [];
+    let pendingEnemyPurchase: { rect: DOMRect; art: string; uid: string } | null = null;
+    let boughtThisTurnUid: string | null = null;
 
     // --- ENEMY SHOPPING LOGIC ---
     // Enemy shops if deck is low (<= 2 cards) or if they have no units and plenty of gold
@@ -533,11 +609,18 @@ export default function App() {
         eGold -= picked.def.price;
         const newCard = makeCard(picked.def);
         eDeck.push(newCard);
+        boughtThisTurnUid = newCard.uid;
+
+        const shopBtn = document.querySelector<HTMLElement>(`[data-shop-entry="${picked.uid}"]`);
+        if (shopBtn) {
+          pendingEnemyPurchase = {
+            rect: shopBtn.getBoundingClientRect(),
+            art: "/images/mystery_card.png",
+            uid: newCard.uid,
+          };
+        }
 
         applyShopPurchase(picked.uid, true);
-        
-        // Visual feedback for enemy buying (just a toast for now)
-        showToast("👹 Enemy bought a mystery card!");
       }
     }
 
@@ -561,6 +644,7 @@ export default function App() {
     for (const card of sortedHand) {
       if (card.cost > mana) continue;
       if (consumed.includes(card.uid)) continue;
+      if (boughtThisTurnUid && card.uid === boughtThisTurnUid) continue;
 
       if (card.type === "unit") {
         const empty = LANES.filter(l => board[l] === null);
@@ -568,7 +652,19 @@ export default function App() {
         const withPlayer = empty.filter(l => pBoard[l] !== null);
         const targets = withPlayer.length > 0 ? withPlayer : empty;
         const lane = targets[Math.floor(Math.random() * targets.length)];
-        board[lane] = { id: `u-${uid()}`, cardId: card.id, name: card.name, atk: card.atk ?? 0, hp: card.hp ?? 1, maxHp: card.hp ?? 1, lane, owner: "enemy" };
+        const unitId = `u-${uid()}`;
+        board[lane] = {
+          id: unitId,
+          cardId: card.id,
+          name: card.name,
+          atk: card.atk ?? 0,
+          hp: card.hp ?? 1,
+          maxHp: card.hp ?? 1,
+          lane,
+          owner: "enemy",
+        };
+        enemyPlacements.push({ lane, unitId });
+        startUnitDeploy(unitId);
         mana -= card.cost;
         consumed.push(card.uid);
       } else if (card.effect === "damage_nexus") {
@@ -625,6 +721,39 @@ export default function App() {
     setEnemyNexus(localEnemyNexus);
     setEnemyGold(eGold);
     setEnemyDeck(eDeck.filter(c => !consumed.includes(c.uid)));
+
+    if (pendingEnemyPurchase) {
+      const { rect, art, uid } = pendingEnemyPurchase;
+      setEnemyNewlyBoughtUid(uid);
+      setTimeout(() => setEnemyNewlyBoughtUid(null), 1800);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          void playShopPurchaseVfx(rect, art, "enemy");
+        });
+      });
+    }
+
+    const placementTasks = enemyPlacements.map(
+      (placement, index) =>
+        new Promise<void>((resolve) => {
+          setTimeout(() => {
+            requestAnimationFrame(() => {
+              void playLanePlacementVfx({
+                side: "enemy",
+                lane: placement.lane,
+                cardArtSrc: "/images/mystery_card.png",
+              }).then(() => {
+                finishUnitDeploy(placement.unitId);
+                resolve();
+              });
+            });
+          }, index * 220);
+        })
+    );
+
+    return placementTasks.length > 0
+      ? Promise.all(placementTasks).then(() => undefined)
+      : Promise.resolve();
   }
 
   // ========== COMBAT ==========
@@ -868,6 +997,7 @@ export default function App() {
     setFlashMana(null);
     setToast(null);
     setNewlyBoughtUid(null);
+    setEnemyNewlyBoughtUid(null);
     setRoundResult(null);
     setCombatData(null);
     setUnitDamageBursts({});
@@ -905,7 +1035,7 @@ export default function App() {
         {/* Center column — enemy top, lanes middle, hand deck bottom */}
         <main className="flex h-full min-h-0 flex-col items-center overflow-hidden pt-[var(--arena-gap)] pb-0">
           <div
-            className="relative shrink-0"
+            className="relative shrink-0 overflow-visible"
             style={{ width: "var(--enemy-w)", height: "var(--enemy-h)" }}
           >
             <EnemyStrip
@@ -918,6 +1048,8 @@ export default function App() {
               flashMana={flashMana === "enemy"}
               flashNexus={flashNexus === "enemy"}
               activeTurn={currentTurn === "enemy"}
+              deckCardUids={enemyDeck.map((c) => c.uid)}
+              newlyBoughtUid={enemyNewlyBoughtUid}
             />
           </div>
 
@@ -966,7 +1098,11 @@ export default function App() {
                         paddingBottom: "var(--lane-inset-y)",
                       }}
                     >
-                      <div className="@container flex min-h-0 flex-1 items-center justify-center">
+                      <div
+                        data-lane-slot="enemy"
+                        data-lane-index={lane}
+                        className="@container flex min-h-0 flex-1 items-center justify-center"
+                      >
                         {e ? (
                           <UnitCard
                             ref={(el) => {
@@ -980,6 +1116,8 @@ export default function App() {
                             hp={e.hp}
                             side="enemy"
                             lane
+                            deploying={deployingUnitIds.has(e.id)}
+                            placed={placedUnitIds.has(e.id)}
                             damageBurstKey={enemyBurst?.key ?? 0}
                             damageAmount={enemyBurst?.amount ?? 0}
                           />
@@ -1009,7 +1147,11 @@ export default function App() {
                         )}
                       </div>
 
-                      <div className="@container flex min-h-0 flex-1 items-center justify-center">
+                      <div
+                        data-lane-slot="player"
+                        data-lane-index={lane}
+                        className="@container flex min-h-0 flex-1 items-center justify-center"
+                      >
                         {p ? (
                           <UnitCard
                             ref={(el) => {
@@ -1023,6 +1165,8 @@ export default function App() {
                             hp={p.hp}
                             side="player"
                             lane
+                            deploying={deployingUnitIds.has(p.id)}
+                            placed={placedUnitIds.has(p.id)}
                             damageBurstKey={playerBurst?.key ?? 0}
                             damageAmount={playerBurst?.amount ?? 0}
                             selected={Boolean(isMoveSource)}

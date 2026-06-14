@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "../../utils/cn";
 import { AbsoluteFrame } from "../layout/AbsoluteFrame";
+import { FrameStatDisplay } from "./FrameStatDisplay";
 import { StrikeButton } from "./StrikeButton";
 
 type PlayerHandDeckProps = {
@@ -51,24 +52,23 @@ export function PlayerHandDeck({
           className
         )}
         bgStyle={embedded ? undefined : { top: "-8%", bottom: "-3%", height: "auto" }}
+        contentClassName="hand-deck-content"
       >
-        <div
-          className={cn("absolute tabular-nums", flashMana && "animate-pulse")}
-          style={{ left: "7.5%", top: "7%" }}
-        >
-          <span className="text-[0.62em] font-bold leading-none text-blue-100 drop-shadow-[0_1px_4px_rgba(0,0,0,1)]">
-            ◆ {playerMana}/{playerMaxMana}
-          </span>
-        </div>
+        <FrameStatDisplay
+          kind="mana"
+          value={playerMana}
+          max={playerMaxMana}
+          flash={flashMana}
+          className="frame-stat--player-mana"
+        />
 
-        <div
-          className={cn("absolute tabular-nums", flashNexus && "animate-pulse")}
-          style={{ right: "7.5%", top: "7%" }}
-        >
-          <span className="text-[0.62em] font-bold leading-none text-red-100 drop-shadow-[0_1px_4px_rgba(0,0,0,1)]">
-            ♥ {displayPlayerNexus}/{nexusMax}
-          </span>
-        </div>
+        <FrameStatDisplay
+          kind="nexus"
+          value={displayPlayerNexus}
+          max={nexusMax}
+          flash={flashNexus}
+          className="frame-stat--player-nexus"
+        />
 
         {showStatus && (
           <div
