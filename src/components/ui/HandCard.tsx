@@ -45,13 +45,6 @@ export function HandCard({
   const customArt = cardHasCustomArt(card.id);
   const artSrc = getCardImageSrc(card.id);
   const displayName = t(`cards.${card.id}`);
-  const typeLabel = isDamageNexus
-    ? t("cardTypes.damageNexus")
-    : isHealNexus
-      ? t("cardTypes.healNexus")
-      : isUnit
-        ? t("cardTypes.unit")
-        : t("cardTypes.spell");
 
   return (
     <button
@@ -115,10 +108,6 @@ export function HandCard({
             </>
           )}
 
-          <div className="hand-card-type absolute right-[3%] top-[3%] z-10 rounded border border-white/20 bg-black/65 px-1 py-0.5 font-bold uppercase tracking-wider text-white/90">
-            {typeLabel}
-          </div>
-
           {!centeredName && (
             <div className="hand-card-footer absolute z-10">
               <CardNameBadge name={displayName} />
@@ -128,10 +117,6 @@ export function HandCard({
       ) : (
         <>
           <CardStatIcon kind="mana" value={card.cost} size="sm" className="absolute left-0.5 top-0.5 z-10" />
-
-          <div className="hand-card-type absolute right-1 top-1 z-10 rounded border border-white/20 bg-black/65 px-1 py-0.5 text-[7px] font-bold uppercase tracking-wider text-white/90">
-            {typeLabel}
-          </div>
 
           <div className="relative z-10 mt-auto p-1.5">
             {!centeredName && <CardNameBadge name={displayName} className="mb-0.5" />}
