@@ -118,7 +118,7 @@
     "steps": {
       "welcome": {
         "title": "Bienvenido, Comandante",
-        "body1": "<0>Ascendants Warfront</0> es un battler táctico por carriles. Despliega unidades, lanza hechizos y supera a la IA antes de que caiga tu Nexus.",
+        "body1": "<0>Ascendants Warfront</0> es un battler táctico por carriles. Despliega unidades, lanza hechizos y supera al enemigo antes de que caiga tu Nexus.",
         "body2": "Este recorrido rápido muestra cada parte del tablero."
       },
       "nexus": {

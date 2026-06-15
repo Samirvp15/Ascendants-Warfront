@@ -118,7 +118,7 @@
     "steps": {
       "welcome": {
         "title": "Welcome, Commander",
-        "body1": "<0>Ascendants Warfront</0> is a lane-based tactical card battler. Deploy units, cast spells, and outmaneuver the AI before your Nexus falls.",
+        "body1": "<0>Ascendants Warfront</0> is a lane-based tactical card battler. Deploy units, cast spells, and outmaneuver the enemy before your Nexus falls.",
         "body2": "This quick tour walks through every part of the board."
       },
       "nexus": {
