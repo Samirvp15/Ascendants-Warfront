@@ -280,7 +280,106 @@ body {
   pointer-events: none;
 }
 
-/* Mana / nexus — icon + header_button value badge */
+.enemy-strip-stats .frame-stat--enemy-left {
+  position: absolute;
+  left: 2.5%;
+  bottom: 12%;
+}
+
+.enemy-strip-stats .frame-stat--enemy-right {
+  position: absolute;
+  right: 2.5%;
+  bottom: 12%;
+}
+
+.enemy-strip-stats .frame-stat--enemy-left .frame-stat__value-text {
+  color: #dbeafe;
+}
+
+.enemy-strip-stats .frame-stat--enemy-right .frame-stat__value-text {
+  color: #fecaca;
+}
+
+/* Icon on the right, header_button plaque behind icon, value text to the left of plaque */
+.frame-stat--icon-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.14em;
+}
+
+.frame-stat__value-text {
+  font-weight: 800;
+  font-size: 0.82em;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95);
+  white-space: nowrap;
+}
+
+.frame-stat__icon-stack {
+  position: relative;
+  width: 3.55em;
+  height: 2.75em;
+  flex-shrink: 0;
+}
+
+.frame-stat__badge-bg {
+  position: absolute;
+  right: 1.08em;
+  left: 0;
+  top: 50%;
+  z-index: 0;
+  height: 1.88em;
+  transform: translateY(-50%);
+  background: transparent url("/images/header_button.png") center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+
+.frame-stat--value-on-badge .frame-stat__icon-stack {
+  width: 5.45em;
+}
+
+.frame-stat--value-on-badge .frame-stat__badge-bg {
+  right: 0.95em;
+  left: 0;
+}
+
+.frame-stat--value-on-badge .frame-stat__value-text {
+  position: absolute;
+  left: 0.62em;
+  right: 3.22em;
+  top: 50%;
+  z-index: 1;
+  transform: translateY(-50%);
+  text-align: center;
+}
+
+/* Mana: icon left, value on right of wide header_button */
+.frame-stat--value-on-badge.frame-stat--icon-left .frame-stat__badge-bg {
+  left: 0.95em;
+  right: 0;
+}
+
+.frame-stat--value-on-badge.frame-stat--icon-left .frame-stat__icon {
+  left: 0;
+  right: auto;
+}
+
+.frame-stat--value-on-badge.frame-stat--icon-left .frame-stat__value-text {
+  left: 2.82em;
+  right: 0.62em;
+  text-align: center;
+}
+
+.frame-stat__icon-stack .frame-stat__icon {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  z-index: 2;
+  transform: translateY(-50%);
+}
+
+/* Mana / nexus — inline fallback (icon beside value badge) */
 .frame-stat {
   display: inline-flex;
   align-items: center;
@@ -315,18 +414,25 @@ body {
   white-space: nowrap;
 }
 
-.frame-stat--enemy-mana {
+
+.frame-stat--player-mana {
   position: absolute;
-  right: 8.5%;
-  top: 20%;
-  transform: translate(44%, -50%);
+  left: 2.5%;
+  top: 4.5%;
 }
 
-.frame-stat--enemy-nexus {
+.frame-stat--player-nexus {
   position: absolute;
-  right: 3.5%;
-  bottom: 22%;
-  transform: translate(44%, 50%);
+  right: 2.5%;
+  top: 4.5%;
+}
+
+.frame-stat--player-nexus .frame-stat__value-text {
+  color: #fecaca;
+}
+
+.frame-stat--player-mana .frame-stat__value-text {
+  color: #dbeafe;
 }
 
 .hand-deck-content {
@@ -334,32 +440,6 @@ body {
   height: 100%;
   width: 100%;
   font-size: clamp(11px, calc(var(--hand-h) * 0.165), 18px);
-}
-
-.frame-stat--player-mana {
-  position: absolute;
-  left: 3.5%;
-  top: 4.5%;
-}
-
-.frame-stat--player-nexus {
-  position: absolute;
-  right: 3.5%;
-  top: 4.5%;
-  flex-direction: row-reverse;
-}
-
-.frame-stat--player-nexus .frame-stat__value {
-  color: #fecaca;
-}
-
-.frame-stat--enemy-nexus .frame-stat__value {
-  color: #fecaca;
-}
-
-.frame-stat--player-mana .frame-stat__value,
-.frame-stat--enemy-mana .frame-stat__value {
-  color: #dbeafe;
 }
 
 .enemy-strip-count {
@@ -731,14 +811,23 @@ body {
   height: var(--shop-refresh-size);
   border: none;
   border-radius: 9999px;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.shop-refresh-btn__bg {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
   background-color: transparent;
   background-image: url("/images/refresh_shop_button.png");
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
-  cursor: pointer;
   transition: transform 0.2s, filter 0.2s;
   filter: drop-shadow(0 4px 10px rgba(200, 127, 53, 0.65));
+  pointer-events: none;
 }
 
 .shop-refresh-btn__count {
@@ -769,13 +858,42 @@ body {
 
 .shop-refresh-btn:hover:not(:disabled) {
   transform: scale(1.06);
+}
+
+.shop-refresh-btn:hover:not(:disabled) .shop-refresh-btn__bg {
   filter: drop-shadow(0 0 12px rgba(249, 115, 22, 0.5));
 }
 
 .shop-refresh-btn:disabled {
   cursor: not-allowed;
   opacity: 0.4;
-  filter: grayscale(0.45);
+}
+
+.shop-refresh-btn:disabled .shop-refresh-btn__bg {
+  filter: grayscale(0.45) drop-shadow(0 4px 10px rgba(200, 127, 53, 0.65));
+}
+
+.shop-refresh-btn--spinning {
+  pointer-events: none;
+}
+
+.shop-refresh-btn--spinning .shop-refresh-btn__bg {
+  animation: shop-refresh-btn-spin 720ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes shop-refresh-btn-spin {
+  0% {
+    transform: rotate(0deg) scale(1);
+    filter: drop-shadow(0 4px 10px rgba(200, 127, 53, 0.65));
+  }
+  45% {
+    transform: rotate(200deg) scale(1.1);
+    filter: drop-shadow(0 0 16px rgba(249, 115, 22, 0.75));
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+    filter: drop-shadow(0 4px 10px rgba(200, 127, 53, 0.65));
+  }
 }
 
 .main-deck-panel {
@@ -824,6 +942,53 @@ body {
 .main-deck-grid > button {
   min-height: 0;
   overflow: visible;
+}
+
+.main-deck-grid__empty-slot {
+  min-height: 0;
+  border-radius: 0.45rem;
+  border: 1px dashed rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.28);
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+.main-deck-grid--refreshing {
+  position: relative;
+  perspective: 900px;
+}
+
+.main-deck-grid--refreshing::after {
+  content: "";
+  position: absolute;
+  inset: -4%;
+  z-index: 12;
+  pointer-events: none;
+  border-radius: 0.65rem;
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    rgba(255, 248, 210, 0) 38%,
+    rgba(255, 236, 170, 0.55) 50%,
+    rgba(255, 248, 210, 0) 62%,
+    transparent 100%
+  );
+  mix-blend-mode: screen;
+  animation: shop-refresh-sweep 720ms ease-out forwards;
+}
+
+@keyframes shop-refresh-sweep {
+  0% {
+    opacity: 0;
+    transform: translateX(-120%) skewX(-12deg);
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(120%) skewX(-12deg);
+  }
 }
 
 .main-deck-refresh {
@@ -1325,6 +1490,43 @@ body {
     opacity: 0;
     transform: translateX(120%);
   }
+}
+
+.shop-refresh-vfx-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.shop-refresh-burst {
+  position: fixed;
+  width: 9rem;
+  height: 9rem;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    rgba(255, 250, 220, 0.98) 0%,
+    rgba(251, 191, 36, 0.78) 28%,
+    rgba(245, 158, 11, 0.22) 55%,
+    transparent 76%
+  );
+  mix-blend-mode: screen;
+  filter: drop-shadow(0 0 22px rgba(251, 191, 36, 0.85));
+}
+
+.shop-refresh-ring {
+  position: fixed;
+  width: 7rem;
+  height: 7rem;
+  border-radius: 50%;
+  pointer-events: none;
+  border: 2px solid rgba(255, 214, 120, 0.9);
+  box-shadow:
+    0 0 18px rgba(251, 191, 36, 0.65),
+    inset 0 0 12px rgba(255, 248, 210, 0.35);
 }
 
 .lane-placement-vfx-overlay {

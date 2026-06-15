@@ -15,6 +15,7 @@ import {
   waitForPlacementAnimationsComplete,
 } from "./utils/lanePlacementVfx";
 import { playShopPurchaseVfx } from "./utils/shopPurchaseVfx";
+import { playShopRefreshVfx } from "./utils/shopRefreshVfx";
 import { cn } from "./utils/cn";
 
 // ---------- TYPES ----------
@@ -41,6 +42,12 @@ type ShopEntry = {
   uid: string;
   def: CardDef;
 };
+
+type ShopSlot = ShopEntry | null;
+
+function countShopCards(slots: ShopSlot[]): number {
+  return slots.filter((slot): slot is ShopEntry => slot !== null).length;
+}
 
 type Owner = "player" | "enemy";
 
@@ -104,41 +111,53 @@ const GOLD = {
 const RESCUE_UNIT: CardDef = { id: "scout", name: "Scout", type: "unit", cost: 1, atk: 1, hp: 2, price: 2 };
 
 // Ensure shop always has at least 1 unit card so player can never be fully stuck
-function guaranteeUnit(entries: ShopEntry[]): ShopEntry[] {
-  const hasUnit = entries.some(e => e.def.type === "unit");
-  if (hasUnit) return entries;
-  // Replace last entry with the rescue unit if no units present
-  const clone = [...entries];
-  if (clone.length > 0) clone[clone.length - 1] = { uid: uid(), def: RESCUE_UNIT };
-  else clone.push({ uid: uid(), def: RESCUE_UNIT });
+function guaranteeUnit(slots: ShopSlot[]): ShopSlot[] {
+  const hasUnit = slots.some((slot) => slot?.def.type === "unit");
+  if (hasUnit) return slots;
+
+  const clone = [...slots];
+  for (let i = clone.length - 1; i >= 0; i--) {
+    if (clone[i] !== null) {
+      clone[i] = { uid: uid(), def: RESCUE_UNIT };
+      return clone;
+    }
+  }
+
+  if (clone.length > 0) clone[0] = { uid: uid(), def: RESCUE_UNIT };
   return clone;
 }
 
 function computeShopAfterPurchase(
-  shop: ShopEntry[],
+  shop: ShopSlot[],
   main: CardDef[],
   boughtUid: string,
   ensureUnit = false
-): { nextShop: ShopEntry[]; nextMain: CardDef[] } {
-  const filtered = shop.filter(e => e.uid !== boughtUid);
-  if (main.length === 0) {
-    return { nextShop: filtered, nextMain: main };
+): { nextShop: ShopSlot[]; nextMain: CardDef[] } {
+  const boughtIndex = shop.findIndex((slot) => slot?.uid === boughtUid);
+  if (boughtIndex === -1) {
+    return { nextShop: shop, nextMain: main };
   }
-  const [drawn, ...nextMain] = main;
-  let nextShop: ShopEntry[] = [...filtered, { uid: uid(), def: drawn }];
-  if (ensureUnit) nextShop = guaranteeUnit(nextShop);
-  return { nextShop, nextMain };
+
+  const nextShop = [...shop];
+  nextShop[boughtIndex] = null;
+  return {
+    nextShop: ensureUnit ? guaranteeUnit(nextShop) : nextShop,
+    nextMain: main,
+  };
 }
 
 function computeShopRefill(
-  shop: ShopEntry[],
+  shop: ShopSlot[],
   main: CardDef[]
-): { nextShop: ShopEntry[]; nextMain: CardDef[] } {
-  const combined = shuffle([...main, ...shop.map(e => e.def)]);
-  const newShop: ShopEntry[] = [];
+): { nextShop: ShopSlot[]; nextMain: CardDef[] } {
+  const combined = shuffle([
+    ...main,
+    ...shop.filter((slot): slot is ShopEntry => slot !== null).map((slot) => slot.def),
+  ]);
+  const newShop: ShopSlot[] = Array(SHOP_SIZE).fill(null);
   const remaining = [...combined];
   for (let i = 0; i < SHOP_SIZE && remaining.length > 0; i++) {
-    newShop.push({ uid: uid(), def: remaining.shift()! });
+    newShop[i] = { uid: uid(), def: remaining.shift()! };
   }
   return { nextShop: guaranteeUnit(newShop), nextMain: remaining };
 }
@@ -198,7 +217,7 @@ export default function App() {
 
   // === MAIN DECK (shared pool) — resets each match ===
   const [mainDeck, setMainDeck] = useState<CardDef[]>(() => buildMainDeck());
-  const [shopEntries, setShopEntries] = useState<ShopEntry[]>([]);
+  const [shopEntries, setShopEntries] = useState<ShopSlot[]>(() => Array(SHOP_SIZE).fill(null));
 
   // === GAME STATE ===
   const [playerBoard, setPlayerBoard] = useState<(Unit | null)[]>([null, null, null]);
@@ -251,6 +270,7 @@ export default function App() {
   const [deployingUnitIds, setDeployingUnitIds] = useState<Set<string>>(() => new Set());
   const [placedUnitIds, setPlacedUnitIds] = useState<Set<string>>(() => new Set());
   const toastTimer = useRef<number | null>(null);
+  const shopRefreshingRef = useRef(false);
   const shopEntriesRef = useRef(shopEntries);
   const mainDeckRef = useRef(mainDeck);
   shopEntriesRef.current = shopEntries;
@@ -317,11 +337,10 @@ export default function App() {
     const md = buildMainDeck();
     setMainDeck(md);
     // Draw initial shop — guarantee at least 1 unit
-    const initialShop: ShopEntry[] = [];
+    const initialShop: ShopSlot[] = Array(SHOP_SIZE).fill(null);
     const remaining = [...md];
     for (let i = 0; i < SHOP_SIZE && remaining.length > 0; i++) {
-      const def = remaining.shift()!;
-      initialShop.push({ uid: uid(), def });
+      initialShop[i] = { uid: uid(), def: remaining.shift()! };
     }
     const nextShop = guaranteeUnit(initialShop);
     setShopEntries(nextShop);
@@ -532,11 +551,16 @@ export default function App() {
 
   // ========== SHOP: REFRESH ==========
   const [refreshes, setRefreshes] = useState(3);
-  function refreshShop() {
+  async function refreshShop() {
+    if (shopRefreshingRef.current) return;
     if (refreshes <= 0) { showToast("No refreshes left"); return; }
+    shopRefreshingRef.current = true;
     setRefreshes(r => r - 1);
-    applyShopRefill();
-    showToast("Shop refreshed");
+    try {
+      await playShopRefreshVfx(() => applyShopRefill());
+    } finally {
+      shopRefreshingRef.current = false;
+    }
   }
 
   // ========== END TURN ==========
@@ -595,7 +619,9 @@ export default function App() {
     const enemyUnitsInHand = eDeck.filter(c => c.type === "unit").length;
     if (eDeck.length <= 2 || (enemyUnitsInHand === 0 && eGold >= 4)) {
       // Look at current shop entries (Main Deck)
-      const affordable = shopEntriesRef.current.filter(entry => eGold >= entry.def.price);
+      const affordable = shopEntriesRef.current.filter(
+        (entry): entry is ShopEntry => entry !== null && eGold >= entry.def.price
+      );
       if (affordable.length > 0) {
         // Prefer units if they have none, otherwise pick highest price (best card)
         let picked = affordable[0];
@@ -1024,7 +1050,7 @@ export default function App() {
       >
         <GameSidebar
           round={round}
-          mainDeckRemaining={mainDeck.length + shopEntries.length}
+          mainDeckRemaining={mainDeck.length + countShopCards(shopEntries)}
           maxDeck={MAX_DECK}
           goldWin={GOLD.WIN_ROUND + GOLD.INCOME_PER_ROUND}
           goldTie={GOLD.TIE_ROUND + GOLD.INCOME_PER_ROUND}
@@ -1260,9 +1286,9 @@ export default function App() {
             onReset={() => resetProgress()}
           />
           <AbsoluteFrameAnchor className="main-deck-panel">
-            <MainDeckShop<ShopEntry>
+            <MainDeckShop
               shopEntries={shopEntries}
-              mainDeckRemaining={mainDeck.length + shopEntries.length}
+              mainDeckRemaining={mainDeck.length + countShopCards(shopEntries)}
               gold={gold}
               deckFull={deckCards.length >= MAX_DECK}
               refreshes={refreshes}

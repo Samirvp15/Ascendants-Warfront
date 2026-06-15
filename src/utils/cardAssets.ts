@@ -9,6 +9,8 @@ const CARD_ART: Record<string, { src: string; centeredName?: boolean }> = {
   assassin: { src: "/images/assasin_img.png", centeredName: true },
   brute: { src: "/images/brute_img.png", centeredName: true },
   colossus: { src: "/images/colossus_img.png", centeredName: true },
+  mend: { src: "/images/mend_spell.png", centeredName: true },
+  healing_wave: { src: "/images/healing_wave_spell.png", centeredName: true },
 };
 
 export function getCardImageSrc(cardId: string): string {

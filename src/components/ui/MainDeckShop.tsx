@@ -2,7 +2,7 @@ import { AbsoluteFrame } from "../layout/AbsoluteFrame";
 import { ShopBackCard } from "./ShopBackCard";
 
 type MainDeckShopProps<T extends { uid: string; def: { price: number; type: string } }> = {
-  shopEntries: T[];
+  shopEntries: (T | null)[];
   mainDeckRemaining: number;
   gold: number;
   deckFull: boolean;
@@ -24,6 +24,8 @@ export function MainDeckShop<T extends { uid: string; def: { price: number; type
   onBuy,
   className = "",
 }: MainDeckShopProps<T>) {
+  const allEmpty = shopEntries.every((entry) => entry === null);
+
   return (
     <>
       <AbsoluteFrame
@@ -41,20 +43,29 @@ export function MainDeckShop<T extends { uid: string; def: { price: number; type
         </header>
 
         <div className="main-deck-grid">
-          {shopEntries.map((entry) => (
-            <ShopBackCard
-              key={entry.uid}
-              entry={entry}
-              canAfford={gold >= entry.def.price}
-              canBuy={!deckFull}
-              onBuy={(sourceEl) => onBuy(entry, sourceEl)}
-              compact
-            />
-          ))}
-          {shopEntries.length === 0 && (
+          {allEmpty ? (
             <div className="main-deck-grid__empty col-span-2 row-span-2 flex items-center justify-center text-center text-[0.75em] text-slate-400">
               Main deck exhausted!
             </div>
+          ) : (
+            shopEntries.map((entry, index) =>
+              entry ? (
+                <ShopBackCard
+                  key={entry.uid}
+                  entry={entry}
+                  canAfford={gold >= entry.def.price}
+                  canBuy={!deckFull}
+                  onBuy={(sourceEl) => onBuy(entry, sourceEl)}
+                  compact
+                />
+              ) : (
+                <div
+                  key={`shop-empty-${index}`}
+                  className="main-deck-grid__empty-slot"
+                  aria-hidden="true"
+                />
+              )
+            )
           )}
         </div>
       </AbsoluteFrame>
@@ -68,6 +79,7 @@ export function MainDeckShop<T extends { uid: string; def: { price: number; type
           aria-label={`Refresh shop, ${refreshes} remaining`}
           className="shop-refresh-btn"
         >
+          <span className="shop-refresh-btn__bg" aria-hidden="true" />
           <span className="shop-refresh-btn__count">{refreshes}</span>
         </button>
       </div>

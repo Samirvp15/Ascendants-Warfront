@@ -69,20 +69,23 @@ export function EnemyStrip({
           value={enemyMana}
           max={enemyMaxMana}
           flash={flashMana}
-          className="frame-stat--enemy-mana"
+          layout="icon-badge"
+          valueOnBadge
+          iconOnLeft
+          className="frame-stat--enemy-left"
         />
         <FrameStatDisplay
           kind="nexus"
           value={displayEnemyNexus}
           max={nexusMax}
           flash={flashNexus}
-          className="frame-stat--enemy-nexus"
+          layout="icon-badge"
+          valueOnBadge
+          className="frame-stat--enemy-right"
         />
       </div>
 
-      {enemyDeckCount > 0 && (
-        <span className="enemy-strip-count font-display tabular-nums">{enemyDeckCount}</span>
-      )}
+      
     </AbsoluteFrame>
   );
 }

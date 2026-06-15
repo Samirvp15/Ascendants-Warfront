@@ -59,6 +59,9 @@ export function PlayerHandDeck({
           value={playerMana}
           max={playerMaxMana}
           flash={flashMana}
+          layout="icon-badge"
+          valueOnBadge
+          iconOnLeft
           className="frame-stat--player-mana"
         />
 
@@ -67,6 +70,8 @@ export function PlayerHandDeck({
           value={displayPlayerNexus}
           max={nexusMax}
           flash={flashNexus}
+          layout="icon-badge"
+          valueOnBadge
           className="frame-stat--player-nexus"
         />
 
