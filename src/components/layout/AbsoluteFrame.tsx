@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { cn } from "../../utils/cn";
 
-type AbsoluteFrameProps = {
+type AbsoluteFrameProps = React.HTMLAttributes<HTMLDivElement> & {
   image: string;
   children?: ReactNode;
   className?: string;
@@ -20,9 +20,10 @@ export function AbsoluteFrame({
   contentClassName,
   style,
   bgStyle,
+  ...rest
 }: AbsoluteFrameProps) {
   return (
-    <div className={cn("absolute-frame", className)} style={style}>
+    <div className={cn("absolute-frame", className)} style={style} {...rest}>
       <img
         src={image}
         alt=""
@@ -49,7 +50,8 @@ export function AbsoluteFrameAnchor({
   className,
   style,
   onClick,
-}: {
+  ...rest
+}: React.HTMLAttributes<HTMLDivElement> & {
   children: ReactNode;
   className?: string;
   style?: CSSProperties;
@@ -63,6 +65,7 @@ export function AbsoluteFrameAnchor({
       onKeyDown={onClick ? (e) => e.key === "Enter" && onClick() : undefined}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
+      {...rest}
     >
       {children}
     </div>

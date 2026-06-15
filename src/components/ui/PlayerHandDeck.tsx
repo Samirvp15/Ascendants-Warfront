@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "../../utils/cn";
 import { AbsoluteFrame } from "../layout/AbsoluteFrame";
-import { FrameStatDisplay } from "./FrameStatDisplay";
+import { FrameStatDisplay, type FrameStatPulseVariant } from "./FrameStatDisplay";
 import { StrikeButton } from "./StrikeButton";
 
 type PlayerHandDeckProps = {
@@ -9,8 +10,10 @@ type PlayerHandDeckProps = {
   playerMaxMana: number;
   displayPlayerNexus: number;
   nexusMax: number;
-  flashMana: boolean;
-  flashNexus: boolean;
+  manaPulseKey?: number;
+  manaPulseVariant?: FrameStatPulseVariant;
+  nexusPulseKey?: number;
+  nexusPulseVariant?: FrameStatPulseVariant;
   deckCount: number;
   deckEmpty: boolean;
   selectedCardName: string | null;
@@ -27,8 +30,10 @@ export function PlayerHandDeck({
   playerMaxMana,
   displayPlayerNexus,
   nexusMax,
-  flashMana,
-  flashNexus,
+  manaPulseKey = 0,
+  manaPulseVariant,
+  nexusPulseKey = 0,
+  nexusPulseVariant,
   deckCount,
   deckEmpty,
   selectedCardName,
@@ -39,6 +44,7 @@ export function PlayerHandDeck({
   embedded = false,
   children,
 }: PlayerHandDeckProps) {
+  const { t } = useTranslation();
   const showStatus = selectedCardName || isMoving || deckEmpty || deckCount <= 2;
 
   return (
@@ -58,7 +64,8 @@ export function PlayerHandDeck({
           kind="mana"
           value={playerMana}
           max={playerMaxMana}
-          flash={flashMana}
+          valuePulseKey={manaPulseKey}
+          pulseVariant={manaPulseVariant}
           layout="icon-badge"
           valueOnBadge
           iconOnLeft
@@ -69,7 +76,8 @@ export function PlayerHandDeck({
           kind="nexus"
           value={displayPlayerNexus}
           max={nexusMax}
-          flash={flashNexus}
+          valuePulseKey={nexusPulseKey}
+          pulseVariant={nexusPulseVariant}
           layout="icon-badge"
           valueOnBadge
           className="frame-stat--player-nexus"
@@ -81,18 +89,24 @@ export function PlayerHandDeck({
             style={{ left: "50%", top: "6.5%" }}
           >
             {deckEmpty && (
-              <span className="text-[0.56em] font-semibold text-rose-200 drop-shadow-md">⚠ Deck empty</span>
+              <span className="text-[0.56em] font-semibold text-rose-200 drop-shadow-md">
+                {t("hand.deckEmpty")}
+              </span>
             )}
             {!deckEmpty && deckCount <= 2 && (
-              <span className="text-[0.56em] font-semibold text-amber-200 drop-shadow-md">{deckCount} left</span>
+              <span className="text-[0.56em] font-semibold text-amber-200 drop-shadow-md">
+                {t("hand.cardsLeft", { count: deckCount })}
+              </span>
             )}
             {selectedCardName && (
               <span className="text-[0.56em] font-bold text-amber-100 drop-shadow-md animate-pulse">
-                {selectedCardName} → lane
+                {t("hand.selectedToLane", { name: selectedCardName })}
               </span>
             )}
             {isMoving && !selectedCardName && (
-              <span className="text-[0.56em] font-bold text-sky-100 drop-shadow-md animate-pulse">Moving → lane</span>
+              <span className="text-[0.56em] font-bold text-sky-100 drop-shadow-md animate-pulse">
+                {t("hand.movingToLane")}
+              </span>
             )}
           </div>
         )}

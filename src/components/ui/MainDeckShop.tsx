@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { AbsoluteFrame } from "../layout/AbsoluteFrame";
 import { ShopBackCard } from "./ShopBackCard";
 
@@ -24,6 +25,7 @@ export function MainDeckShop<T extends { uid: string; def: { price: number; type
   onBuy,
   className = "",
 }: MainDeckShopProps<T>) {
+  const { t } = useTranslation();
   const allEmpty = shopEntries.every((entry) => entry === null);
 
   return (
@@ -35,17 +37,17 @@ export function MainDeckShop<T extends { uid: string; def: { price: number; type
       >
         <header className="main-deck-header">
           <h3 className="font-display text-[0.85em] font-bold tracking-wider text-amber-300 drop-shadow-md">
-            MAIN DECK
+            {t("shop.title")}
           </h3>
           <p className="font-display mt-[0.25em] text-[0.72em] text-amber-100 drop-shadow-md">
-            {mainDeckRemaining} cards in pool
+            {t("shop.cardsInPool", { count: mainDeckRemaining })}
           </p>
         </header>
 
         <div className="main-deck-grid">
           {allEmpty ? (
             <div className="main-deck-grid__empty col-span-2 row-span-2 flex items-center justify-center text-center text-[0.75em] text-slate-400">
-              Main deck exhausted!
+              {t("shop.exhausted")}
             </div>
           ) : (
             shopEntries.map((entry, index) =>
@@ -75,8 +77,8 @@ export function MainDeckShop<T extends { uid: string; def: { price: number; type
           type="button"
           onClick={onRefresh}
           disabled={refreshes <= 0 || winner}
-          title={`Refresh shop (${refreshes} left)`}
-          aria-label={`Refresh shop, ${refreshes} remaining`}
+          title={t("shop.refreshTitle", { count: refreshes })}
+          aria-label={t("shop.refreshAria", { count: refreshes })}
           className="shop-refresh-btn"
         >
           <span className="shop-refresh-btn__bg" aria-hidden="true" />

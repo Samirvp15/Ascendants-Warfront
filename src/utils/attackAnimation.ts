@@ -10,7 +10,7 @@ export type ClashImpactResult = {
 
 const COMBAT_LAYER_SEL = ".unit-card-combat-layer";
 const REST = "translate3d(0, 0, 0) scale(1)";
-const LUNGE_SCALE = 1.06;
+const LUNGE_SCALE = 1;
 
 const TIMING = {
   /** Faceoff pause before both units lunge */

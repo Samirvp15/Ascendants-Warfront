@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "../../utils/cn";
 
 export const MYSTERY_CARD_SRC = "/images/mystery_card.png";
@@ -10,6 +11,8 @@ type MysteryDeckCardProps = {
 };
 
 export function MysteryDeckCard({ newlyBought, className, style }: MysteryDeckCardProps) {
+  const { t } = useTranslation();
+
   return (
     <div
       className={cn(
@@ -21,7 +24,7 @@ export function MysteryDeckCard({ newlyBought, className, style }: MysteryDeckCa
     >
       <img
         src={MYSTERY_CARD_SRC}
-        alt="Mystery card"
+        alt={t("shop.mysteryAlt")}
         draggable={false}
         className="enemy-mystery-card__img"
       />

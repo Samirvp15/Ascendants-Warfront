@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { cn } from "../../utils/cn";
 import { cardHasCustomArt, cardUsesCenteredName, getCardImageSrc } from "../../utils/cardAssets";
 import { CardArtName } from "./CardArtName";
@@ -35,6 +36,7 @@ export function HandCard({
   compact = false,
   onClick,
 }: HandCardProps) {
+  const { t } = useTranslation();
   const isUnit = card.type === "unit";
   const isHealNexus = card.effect === "heal_nexus";
   const isDamageNexus = card.effect === "damage_nexus";
@@ -42,6 +44,14 @@ export function HandCard({
   const centeredName = cardUsesCenteredName(card.id);
   const customArt = cardHasCustomArt(card.id);
   const artSrc = getCardImageSrc(card.id);
+  const displayName = t(`cards.${card.id}`);
+  const typeLabel = isDamageNexus
+    ? t("cardTypes.damageNexus")
+    : isHealNexus
+      ? t("cardTypes.healNexus")
+      : isUnit
+        ? t("cardTypes.unit")
+        : t("cardTypes.spell");
 
   return (
     <button
@@ -51,10 +61,10 @@ export function HandCard({
       disabled={!clickable}
       title={
         healWouldWaste
-          ? "Nexus already at full HP"
+          ? t("hand.tooltipFullNexus")
           : autoCastable
-            ? "Tap to cast"
-            : "Tap to select, then click a lane"
+            ? t("hand.tooltipTapCast")
+            : t("hand.tooltipTapSelect")
       }
       className={cn(
         "card-frame group relative shrink-0 flex-col overflow-hidden transition-all duration-300",
@@ -68,7 +78,7 @@ export function HandCard({
       <div className="absolute inset-0">
         <img
           src={artSrc}
-          alt={card.name}
+          alt={displayName}
           className={cn(
             "h-full w-full transition-opacity",
             customArt ? "object-fill opacity-100" : "object-cover opacity-75 group-hover:opacity-90"
@@ -82,7 +92,7 @@ export function HandCard({
         )}
       </div>
 
-      {centeredName && <CardArtName name={card.name} />}
+      {centeredName && <CardArtName name={displayName} />}
 
       {compact ? (
         <>
@@ -106,12 +116,12 @@ export function HandCard({
           )}
 
           <div className="hand-card-type absolute right-[3%] top-[3%] z-10 rounded border border-white/20 bg-black/65 px-1 py-0.5 font-bold uppercase tracking-wider text-white/90">
-            {isDamageNexus ? "💥nex" : isHealNexus ? "♥nex" : isUnit ? "unit" : "spell"}
+            {typeLabel}
           </div>
 
           {!centeredName && (
             <div className="hand-card-footer absolute z-10">
-              <CardNameBadge name={card.name} />
+              <CardNameBadge name={displayName} />
             </div>
           )}
         </>
@@ -120,11 +130,11 @@ export function HandCard({
           <CardStatIcon kind="mana" value={card.cost} size="sm" className="absolute left-0.5 top-0.5 z-10" />
 
           <div className="hand-card-type absolute right-1 top-1 z-10 rounded border border-white/20 bg-black/65 px-1 py-0.5 text-[7px] font-bold uppercase tracking-wider text-white/90">
-            {isDamageNexus ? "💥nex" : isHealNexus ? "♥nex" : isUnit ? "unit" : "spell"}
+            {typeLabel}
           </div>
 
           <div className="relative z-10 mt-auto p-1.5">
-            {!centeredName && <CardNameBadge name={card.name} className="mb-0.5" />}
+            {!centeredName && <CardNameBadge name={displayName} className="mb-0.5" />}
             {isUnit && (
               <div className="flex items-end justify-between gap-0.5">
                 <CardStatIcon kind="attack" value={card.atk ?? 0} size="sm" />
@@ -146,7 +156,7 @@ export function HandCard({
             compact ? "-bottom-1.5 px-1.5 py-0 text-[6px]" : "-bottom-2 px-2 py-0.5 text-[7px]"
           )}
         >
-          Tap
+          {t("cardTypes.tap")}
         </div>
       )}
     </button>

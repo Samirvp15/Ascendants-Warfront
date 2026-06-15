@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { cn } from "../../utils/cn";
 import { GoldIcon } from "./GoldIcon";
 
@@ -15,6 +16,7 @@ type ShopBackCardProps = {
 };
 
 export function ShopBackCard({ entry, canAfford, canBuy, onBuy }: ShopBackCardProps) {
+  const { t } = useTranslation();
   const enabled = canAfford && canBuy;
 
   return (
@@ -23,7 +25,7 @@ export function ShopBackCard({ entry, canAfford, canBuy, onBuy }: ShopBackCardPr
       data-shop-entry={entry.uid}
       onClick={(e) => onBuy(e.currentTarget)}
       disabled={!enabled}
-      title={`Buy mystery card for ${entry.def.price} gold`}
+      title={t("shop.buyTitle", { price: entry.def.price })}
       className={cn(
         "group flex h-full w-full min-h-0 items-center justify-center border-0 bg-transparent p-0 transition-all duration-300",
         enabled
@@ -34,7 +36,7 @@ export function ShopBackCard({ entry, canAfford, canBuy, onBuy }: ShopBackCardPr
       <span className="shop-card-face">
         <img
           src="/images/mystery_card.png"
-          alt="Mystery card"
+          alt={t("shop.mysteryAlt")}
           draggable={false}
           className="block h-full w-auto max-w-full select-none object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.55)]"
         />

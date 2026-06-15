@@ -1,0 +1,181 @@
+{
+  "meta": {
+    "title": "Ascendants Warfront — Lane Clash"
+  },
+  "common": {
+    "dash": "—",
+    "languageEn": "EN",
+    "languageEs": "ES",
+    "languageSwitch": "Language"
+  },
+  "cards": {
+    "scout": "Scout",
+    "acolyte": "Acolyte",
+    "soldier": "Soldier",
+    "guardian": "Guardian",
+    "tank": "Tank",
+    "raider": "Raider",
+    "knight": "Knight",
+    "assassin": "Assassin",
+    "brute": "Brute",
+    "colossus": "Colossus",
+    "mend": "Mend",
+    "fireball": "Fireball",
+    "healing_wave": "Healing Wave",
+    "meteor": "Meteor",
+    "life_surge": "Life Surge",
+    "void_bolt": "Void Bolt"
+  },
+  "cardTypes": {
+    "unit": "unit",
+    "spell": "spell",
+    "damageNexus": "💥nex",
+    "healNexus": "♥nex",
+    "tap": "Tap"
+  },
+  "header": {
+    "logoAlt": "Ascendants Warfront",
+    "guide": "Guide",
+    "guideTitle": "Replay the how-to-play tour",
+    "newMatch": "New Match",
+    "resetAll": "New Match"
+  },
+  "howItWorks": {
+    "title": "How It Works",
+    "mainDeck": "Main Deck",
+    "mainDeckDesc": "Shared pool, face-down until bought.",
+    "yourDeck": "Your Deck",
+    "yourDeckDesc": "Personal cards: Max {{maxDeck}}.",
+    "goldEachRound": "Gold each round",
+    "goldPayouts": "Win: +{{goldWin}} · Tie: +{{goldTie}} · Lose: +{{goldLose}}"
+  },
+  "shop": {
+    "title": "MAIN DECK",
+    "cardsInPool": "{{count}} cards in pool",
+    "exhausted": "Main deck exhausted!",
+    "refreshTitle": "Refresh shop ({{count}} left)",
+    "refreshAria": "Refresh shop, {{count}} remaining",
+    "buyTitle": "Buy mystery card for {{price}} gold",
+    "mysteryAlt": "Mystery card"
+  },
+  "hand": {
+    "deckEmpty": "⚠ Deck empty",
+    "cardsLeft": "{{count}} left",
+    "selectedToLane": "{{name}} → lane",
+    "movingToLane": "Moving → lane",
+    "deckEmptyBanner": "Deck empty! Buy from Main Deck →",
+    "tooltipFullNexus": "Nexus already at full HP",
+    "tooltipTapCast": "Tap to cast",
+    "tooltipTapSelect": "Tap to select, then click a lane"
+  },
+  "lanes": {
+    "castHere": "Cast here",
+    "moveHere": "Move here",
+    "deployHere": "Deploy here",
+    "moving": "MOVING"
+  },
+  "strike": {
+    "label": "STRIKE",
+    "title": "End your turn and begin combat"
+  },
+  "stats": {
+    "manaAria": "Mana {{value}} of {{max}}",
+    "nexusAria": "Nexus life {{value}} of {{max}}"
+  },
+  "game": {
+    "confirmReset": "Reset everything? Gold, deck, and match progress will restart from zero.",
+    "victoryTitle": "Victory!",
+    "defeatTitle": "Defeat",
+    "victoryBody": "The enemy nexus has fallen. +{{gold}}💰",
+    "defeatBody": "Your nexus was shattered.",
+    "autoReset": "Auto-resetting and starting new match...",
+    "resetPlayNow": "Reset & Play Now",
+    "toasts": {
+      "noEnemyUnit": "No enemy unit in this lane to damage!",
+      "noWoundedAlly": "No wounded friendly unit in this lane!",
+      "nexusFull": "Nexus already at full HP!",
+      "needGold": "Need {{price}}💰",
+      "deckFull": "Deck full! ({{max}})",
+      "noRefreshes": "No refreshes left",
+      "enemyVoidBolt": "👹 Enemy cast Void Bolt → -{{val}} to your Nexus!",
+      "enemyLifeSurge": "👹 Enemy cast Life Surge → +{{val}} to their Nexus",
+      "rescue": "☀️ Rescue! +{{gold}}💰 — buy a unit to stay in the fight!"
+    }
+  },
+  "tour": {
+    "closeAria": "Close tour",
+    "skip": "Skip tour",
+    "back": "Back",
+    "next": "Next",
+    "play": "Play!",
+    "localeBack": "Back",
+    "localeClose": "Close",
+    "localeLast": "Play!",
+    "localeNext": "Next",
+    "localeNextProgress": "Next ({{current}} of {{total}})",
+    "localeOpen": "Open guide step",
+    "localeSkip": "Skip tour",
+    "steps": {
+      "welcome": {
+        "title": "Welcome, Commander",
+        "body1": "<0>Ascendants Warfront</0> is a lane-based tactical card battler. Deploy units, cast spells, and outmaneuver the AI before your Nexus falls.",
+        "body2": "This quick tour walks through every part of the board."
+      },
+      "nexus": {
+        "title": "Your Nexus",
+        "body1": "Your <0>Nexus</0> starts at 20 HP. If it reaches 0, you lose the match.",
+        "body2": "Protect lanes — uncontested enemy units strike your Nexus every combat phase."
+      },
+      "enemy": {
+        "title": "Enemy Command",
+        "body1": "The enemy has their own <0>mana</0>, <1>Nexus HP</1>, and hidden <2>deck</2> (face-down cards on the left).",
+        "body2": "Destroy their Nexus to win and earn a +6 gold bonus."
+      },
+      "lanes": {
+        "title": "Three Lanes",
+        "body1": "The battlefield has <0>three lanes</0>. Each side can hold one unit per lane.",
+        "rule1": "Both occupied → units trade damage (⚔ Attack vs HP).",
+        "rule2": "Only your unit → you hit the enemy Nexus.",
+        "rule3": "Only enemy unit → they hit your Nexus."
+      },
+      "mana": {
+        "title": "Mana",
+        "body1": "Spend <0>mana</0> to play cards. You gain +1 max mana each round (cap 10).",
+        "body2": "Unused mana does not carry over — spend it before ending your turn."
+      },
+      "hand": {
+        "title": "Your Hand & Deck",
+        "body1": "Cards in your <0>personal deck</0> appear here. Click a card, then click a lane to deploy or cast.",
+        "rule1": "Units → empty friendly lane.",
+        "rule2": "Spells → target a lane (or auto-cast for nexus heals).",
+        "rule3": "Click your unit, then another lane to move or swap."
+      },
+      "strike": {
+        "title": "End Your Turn — STRIKE",
+        "body1": "When you are done deploying, moving, and casting, press <0>STRIKE</0> to end your turn.",
+        "body2": "The enemy plays next, then combat resolves automatically."
+      },
+      "gold": {
+        "title": "Gold Economy",
+        "body1": "After each round you earn <0>gold</0> based on combat (win / tie / lose) plus base income.",
+        "body2": "Spend gold in the Main Deck shop to grow your army."
+      },
+      "shop": {
+        "title": "Main Deck Shop",
+        "body1": "Buy face-down cards from the shared <0>Main Deck</0> into your personal deck (max {{maxDeck}} cards).",
+        "rule1": "Played cards are consumed permanently.",
+        "rule2": "Refresh restocks all four shop slots (limited uses).",
+        "rule3": "Bought slots stay empty until you refresh."
+      },
+      "reference": {
+        "title": "Quick Reference",
+        "body1": "This panel summarizes deck limits and round gold payouts. Reopen the tour anytime with the <0>Guide</0> button in the top-right."
+      },
+      "ready": {
+        "title": "You're Ready",
+        "body1": "<0>Core loop:</0> Deploy → STRIKE → Combat → Earn gold → Shop → Repeat.",
+        "body2": "Good luck, Commander. May your lanes hold."
+      }
+    }
+  }
+}

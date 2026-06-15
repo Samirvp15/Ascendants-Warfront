@@ -1,4 +1,5 @@
 import { forwardRef, memo } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "../../utils/cn";
 import { cardHasCustomArt, cardUsesCenteredName, getCardImageSrc } from "../../utils/cardAssets";
 import { CardArtName } from "./CardArtName";
@@ -30,7 +31,7 @@ export const UnitCard = memo(
     {
       unitId,
       cardId,
-      name,
+      name: _name,
       atk,
       hp,
       side,
@@ -47,6 +48,8 @@ export const UnitCard = memo(
     },
     ref
   ) {
+    const { t } = useTranslation();
+    const displayName = t(`cards.${cardId}`);
     const isEnemy = side === "enemy";
     const centeredName = cardUsesCenteredName(cardId);
     const customArt = cardHasCustomArt(cardId);
@@ -57,10 +60,14 @@ export const UnitCard = memo(
         <div className="absolute inset-0 z-0">
           <img
             src={artSrc}
-            alt={name}
+            alt={displayName}
             className={cn(
               "h-full w-full",
-              customArt ? "object-fill opacity-100" : "object-cover opacity-80"
+              customArt
+                ? "object-fill opacity-100"
+                : lane
+                  ? "object-contain opacity-90"
+                  : "object-cover opacity-80"
             )}
             onError={(ev) => {
               (ev.target as HTMLImageElement).style.display = "none";
@@ -76,7 +83,7 @@ export const UnitCard = memo(
           )}
         </div>
 
-        {centeredName && <CardArtName name={name} />}
+        {centeredName && <CardArtName name={displayName} />}
 
         {lane ? (
           <>
@@ -97,7 +104,7 @@ export const UnitCard = memo(
             />
             {!centeredName && (
               <div className="hand-card-footer absolute z-10">
-                <CardNameBadge name={name} />
+                <CardNameBadge name={displayName} />
               </div>
             )}
             <DamageParticleBurst burstKey={damageBurstKey} amount={damageAmount} />
@@ -106,7 +113,7 @@ export const UnitCard = memo(
           <>
             {!centeredName && (
               <div className="relative z-10 flex justify-center p-2">
-                <CardNameBadge name={name} />
+                <CardNameBadge name={displayName} />
               </div>
             )}
             <div className="relative z-10 mt-auto flex items-end justify-between p-2">
@@ -119,7 +126,7 @@ export const UnitCard = memo(
         {moving && (
           <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
             <span className="font-display rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-black text-slate-900 shadow-lg animate-pulse">
-              MOVING
+              {t("lanes.moving")}
             </span>
           </div>
         )}
@@ -132,10 +139,10 @@ export const UnitCard = memo(
         data-unit-id={unitId}
         onClick={onClick}
         className={cn(
-          "card-frame relative flex flex-col overflow-hidden",
+          "card-frame relative flex flex-col",
           lane
-            ? "lane-unit-card unit-card-lane-shell h-full min-h-0 w-full min-w-0 max-h-full max-w-full"
-            : "h-full max-h-[130px] w-full max-w-[155px] transition-all duration-700",
+            ? "lane-unit-card unit-card-lane-shell h-full min-h-0 w-full min-w-0 max-h-full max-w-full overflow-visible"
+            : "h-full max-h-[130px] w-full max-w-[155px] overflow-hidden transition-all duration-700",
           isEnemy ? "border-rose-700/70" : "cursor-pointer border-sky-600/70",
           selected && !lane && "scale-105 ring-2 ring-amber-400 shadow-lg shadow-amber-400/30",
           selected && lane && "ring-2 ring-amber-400 shadow-lg shadow-amber-400/30",

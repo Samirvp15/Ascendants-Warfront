@@ -1,0 +1,181 @@
+{
+  "meta": {
+    "title": "Ascendants Warfront — Choque de Carriles"
+  },
+  "common": {
+    "dash": "—",
+    "languageEn": "EN",
+    "languageEs": "ES",
+    "languageSwitch": "Idioma"
+  },
+  "cards": {
+    "scout": "Explorador",
+    "acolyte": "Acólito",
+    "soldier": "Soldado",
+    "guardian": "Guardián",
+    "tank": "Tanque",
+    "raider": "Asaltante",
+    "knight": "Caballero",
+    "assassin": "Asesino",
+    "brute": "Bruto",
+    "colossus": "Coloso",
+    "mend": "Reparar",
+    "fireball": "Bola de Fuego",
+    "healing_wave": "Ola Curativa",
+    "meteor": "Meteoro",
+    "life_surge": "Oleada Vital",
+    "void_bolt": "Rayo del Vacío"
+  },
+  "cardTypes": {
+    "unit": "unidad",
+    "spell": "hechizo",
+    "damageNexus": "💥nex",
+    "healNexus": "♥nex",
+    "tap": "Tocar"
+  },
+  "header": {
+    "logoAlt": "Ascendants Warfront",
+    "guide": "Guía",
+    "guideTitle": "Repetir el tutorial de juego",
+    "newMatch": "Nueva Partida",
+    "resetAll": "Nueva Partida"
+  },
+  "howItWorks": {
+    "title": "Cómo Funciona",
+    "mainDeck": "Mazo Principal",
+    "mainDeckDesc": "Reserva compartida, boca abajo hasta comprar.",
+    "yourDeck": "Tu Mazo",
+    "yourDeckDesc": "Cartas personales: máx. {{maxDeck}}.",
+    "goldEachRound": "Oro por ronda",
+    "goldPayouts": "Victoria: +{{goldWin}} · Empate: +{{goldTie}} · Derrota: +{{goldLose}}"
+  },
+  "shop": {
+    "title": "MAZO PRINCIPAL",
+    "cardsInPool": "{{count}} cartas en reserva",
+    "exhausted": "¡Mazo principal agotado!",
+    "refreshTitle": "Actualizar tienda ({{count}} restantes)",
+    "refreshAria": "Actualizar tienda, {{count}} restantes",
+    "buyTitle": "Comprar carta misteriosa por {{price}} de oro",
+    "mysteryAlt": "Carta misteriosa"
+  },
+  "hand": {
+    "deckEmpty": "⚠ Mazo vacío",
+    "cardsLeft": "{{count}} restantes",
+    "selectedToLane": "{{name}} → carril",
+    "movingToLane": "Moviendo → carril",
+    "deckEmptyBanner": "¡Mazo vacío! Compra en el Mazo Principal →",
+    "tooltipFullNexus": "El Nexus ya tiene vida completa",
+    "tooltipTapCast": "Toca para lanzar",
+    "tooltipTapSelect": "Toca para elegir, luego un carril"
+  },
+  "lanes": {
+    "castHere": "Lanzar aquí",
+    "moveHere": "Mover aquí",
+    "deployHere": "Desplegar aquí",
+    "moving": "MOVIENDO"
+  },
+  "strike": {
+    "label": "STRIKE",
+    "title": "Termina tu turno e inicia el combate"
+  },
+  "stats": {
+    "manaAria": "Maná {{value}} de {{max}}",
+    "nexusAria": "Vida del Nexus {{value}} de {{max}}"
+  },
+  "game": {
+    "confirmReset": "¿Reiniciar todo? El oro, el mazo y el progreso volverán a cero.",
+    "victoryTitle": "¡Victoria!",
+    "defeatTitle": "Derrota",
+    "victoryBody": "El nexus enemigo ha caído. +{{gold}}💰",
+    "defeatBody": "Tu nexus ha sido destruido.",
+    "autoReset": "Reinicio automático e inicio de nueva partida...",
+    "resetPlayNow": "Reiniciar y Jugar",
+    "toasts": {
+      "noEnemyUnit": "¡No hay unidad enemiga en este carril!",
+      "noWoundedAlly": "¡No hay unidad aliada herida en este carril!",
+      "nexusFull": "¡El Nexus ya tiene vida completa!",
+      "needGold": "Necesitas {{price}}💰",
+      "deckFull": "¡Mazo lleno! ({{max}})",
+      "noRefreshes": "No quedan actualizaciones",
+      "enemyVoidBolt": "👹 El enemigo lanzó Rayo del Vacío → -{{val}} a tu Nexus!",
+      "enemyLifeSurge": "👹 El enemigo lanzó Oleada Vital → +{{val}} a su Nexus",
+      "rescue": "☀️ ¡Rescate! +{{gold}}💰 — ¡compra una unidad para seguir!"
+    }
+  },
+  "tour": {
+    "closeAria": "Cerrar tutorial",
+    "skip": "Saltar tutorial",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "play": "¡Jugar!",
+    "localeBack": "Atrás",
+    "localeClose": "Cerrar",
+    "localeLast": "¡Jugar!",
+    "localeNext": "Siguiente",
+    "localeNextProgress": "Siguiente ({{current}} de {{total}})",
+    "localeOpen": "Abrir paso del tutorial",
+    "localeSkip": "Saltar tutorial",
+    "steps": {
+      "welcome": {
+        "title": "Bienvenido, Comandante",
+        "body1": "<0>Ascendants Warfront</0> es un battler táctico por carriles. Despliega unidades, lanza hechizos y supera a la IA antes de que caiga tu Nexus.",
+        "body2": "Este recorrido rápido muestra cada parte del tablero."
+      },
+      "nexus": {
+        "title": "Tu Nexus",
+        "body1": "Tu <0>Nexus</0> comienza con 20 PV. Si llega a 0, pierdes la partida.",
+        "body2": "Protege los carriles — unidades enemigas sin oposición golpean tu Nexus cada combate."
+      },
+      "enemy": {
+        "title": "Mando Enemigo",
+        "body1": "El enemigo tiene su propio <0>maná</0>, <1>vida del Nexus</1> y <2>mazo</2> oculto (cartas boca abajo a la izquierda).",
+        "body2": "Destruye su Nexus para ganar y obtener +6 de oro de bonificación."
+      },
+      "lanes": {
+        "title": "Tres Carriles",
+        "body1": "El campo tiene <0>tres carriles</0>. Cada bando puede tener una unidad por carril.",
+        "rule1": "Ambos ocupados → intercambian daño de ⚔ (Ataque vs PV).",
+        "rule2": "Solo tu unidad → golpea el Nexus enemigo.",
+        "rule3": "Solo unidad enemiga → golpea tu Nexus."
+      },
+      "mana": {
+        "title": "Maná",
+        "body1": "Gasta <0>maná</0> para jugar cartas. Ganas +1 de maná máximo por ronda (tope 10).",
+        "body2": "El maná no usado no se acumula — gástalo antes de terminar tu turno."
+      },
+      "hand": {
+        "title": "Tu Mano y Mazo",
+        "body1": "Las cartas de tu <0>mazo personal</0> aparecen aquí. Elige una carta y luego un carril para desplegar o lanzar.",
+        "rule1": "Unidades → carril aliado vacío.",
+        "rule2": "Hechizos → elige un carril (o auto-lanzar curas de nexus).",
+        "rule3": "Toca tu unidad y otro carril para mover o intercambiar."
+      },
+      "strike": {
+        "title": "Fin del Turno — STRIKE",
+        "body1": "Cuando termines de desplegar, mover y lanzar, pulsa <0>STRIKE</0> para acabar tu turno.",
+        "body2": "Luego juega el enemigo y el combate se resuelve automáticamente."
+      },
+      "gold": {
+        "title": "Economía de Oro",
+        "body1": "Tras cada ronda ganas <0>oro</0> según el combate (victoria / empate / derrota) más ingreso base.",
+        "body2": "Gasta oro en la tienda del Mazo Principal para reforzar tu ejército."
+      },
+      "shop": {
+        "title": "Tienda del Mazo Principal",
+        "body1": "Compra cartas boca abajo del <0>Mazo Principal</0> compartido para tu mazo personal (máx. {{maxDeck}} cartas).",
+        "rule1": "Las cartas jugadas se consumen permanentemente.",
+        "rule2": "Actualizar repone las cuatro ranuras (usos limitados).",
+        "rule3": "Las ranuras compradas quedan vacías hasta actualizar."
+      },
+      "reference": {
+        "title": "Referencia Rápida",
+        "body1": "Este panel resume límites del mazo y pagos de oro por ronda. Abre el tutorial con el botón <0>Guía</0> arriba a la derecha."
+      },
+      "ready": {
+        "title": "Listo para Combatir",
+        "body1": "<0>Bucle principal:</0> Desplegar → STRIKE → Combate → Oro → Tienda → Repetir.",
+        "body2": "Buena suerte, Comandante. Que tus carriles aguanten."
+      }
+    }
+  }
+}

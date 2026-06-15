@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { LanguageSync } from "./components/i18n/LanguageSync";
 import { AbsoluteFrame, AbsoluteFrameAnchor } from "./components/layout/AbsoluteFrame";
 import { EnemyStrip } from "./components/ui/EnemyStrip";
+import type { FrameStatPulseVariant } from "./components/ui/FrameStatDisplay";
 import { GameControls, GameSidebar } from "./components/ui/GameHeader";
 import { HandCard } from "./components/ui/HandCard";
 import { MainDeckShop } from "./components/ui/MainDeckShop";
 import { PlayerHandDeck } from "./components/ui/PlayerHandDeck";
 import { EmptySlot, UnitCard } from "./components/ui/UnitCard";
+import { useGameTour } from "./hooks/useGameTour";
 import { playLaneClash, playUnopposedAttack, resetAllCombatUnits } from "./utils/attackAnimation";
 import { getCardImageSrc } from "./utils/cardAssets";
 import { clearAllLaneVfx } from "./utils/laneAttackVfx";
@@ -162,6 +166,107 @@ function computeShopRefill(
   return { nextShop: guaranteeUnit(newShop), nextMain: remaining };
 }
 
+type EnemyShopContext = {
+  deckSize: number;
+  unitsInHand: number;
+  gold: number;
+  enemyNexus: number;
+  playerNexus: number;
+  enemyBoardUnits: number;
+  playerBoardUnits: number;
+  enemyMana: number;
+};
+
+function countBoardUnits(board: (Unit | null)[]): number {
+  return board.filter((unit): unit is Unit => unit !== null).length;
+}
+
+function shouldEnemyShop(ctx: EnemyShopContext): boolean {
+  if (ctx.deckSize >= MAX_DECK || ctx.gold < 2) return false;
+
+  const lowHand = ctx.deckSize <= 2;
+  const thinHand = ctx.deckSize <= 4;
+  const noUnits = ctx.unitsInHand === 0;
+  const nexusDanger = ctx.enemyNexus <= STARTING_NEXUS * 0.55;
+  const behindBoard = ctx.playerBoardUnits > ctx.enemyBoardUnits;
+  const playerLowNexus = ctx.playerNexus <= STARTING_NEXUS * 0.45;
+  const flushGold = ctx.gold >= 10 && ctx.deckSize <= MAX_DECK - 2;
+
+  return (
+    lowHand ||
+    (noUnits && ctx.gold >= 3) ||
+    (nexusDanger && thinHand) ||
+    (behindBoard && ctx.gold >= 5 && thinHand) ||
+    (playerLowNexus && ctx.gold >= 6 && ctx.deckSize <= 5) ||
+    flushGold
+  );
+}
+
+function maxEnemyShopBuys(ctx: EnemyShopContext): number {
+  const room = MAX_DECK - ctx.deckSize;
+  if (room <= 0) return 0;
+
+  let target = 1;
+  if (ctx.deckSize <= 1 && ctx.gold >= 5) target = 3;
+  else if (ctx.deckSize <= 2 && ctx.gold >= 9) target = 3;
+  else if (ctx.unitsInHand === 0 && ctx.gold >= 7) target = 2;
+  else if (ctx.enemyNexus <= STARTING_NEXUS * 0.45 && ctx.gold >= 8) target = 2;
+  else if (ctx.playerBoardUnits >= ctx.enemyBoardUnits + 2 && ctx.gold >= 8) target = 2;
+  else if (ctx.playerNexus <= 8 && ctx.gold >= 10 && ctx.deckSize <= 4) target = 2;
+  else if (ctx.gold >= 12 && ctx.deckSize <= 3) target = 3;
+
+  return Math.min(target, room, 3);
+}
+
+function scoreEnemyShopEntry(entry: ShopEntry, ctx: EnemyShopContext): number {
+  const def = entry.def;
+  let score = def.price;
+
+  if (def.type === "unit") {
+    score += 8;
+    if (ctx.unitsInHand === 0) score += 18;
+    if (ctx.playerBoardUnits > ctx.enemyBoardUnits) score += 12;
+    if (ctx.enemyNexus <= STARTING_NEXUS * 0.6) score += 8;
+    if (def.cost <= ctx.enemyMana) score += 5;
+    else if (def.cost <= ctx.enemyMana + 2) score += 2;
+    if ((def.atk ?? 0) >= 4) score += 3;
+  }
+
+  if (def.effect === "damage_nexus") {
+    if (ctx.playerNexus <= 6) score += 22;
+    else if (ctx.playerNexus <= 12) score += 12;
+    else score += 4;
+  }
+
+  if (def.effect === "heal_nexus") {
+    if (ctx.enemyNexus >= STARTING_NEXUS) score -= 40;
+    else score += (STARTING_NEXUS - ctx.enemyNexus) * 1.4;
+  }
+
+  if (def.effect === "damage") {
+    score += ctx.playerBoardUnits > 0 ? 8 : -6;
+  }
+
+  if (def.effect === "heal") {
+    score += ctx.enemyNexus <= STARTING_NEXUS * 0.7 ? 4 : 1;
+  }
+
+  if (def.price > ctx.gold * 0.65) score -= 4;
+
+  return score;
+}
+
+function pickEnemyShopEntry(entries: ShopEntry[], ctx: EnemyShopContext): ShopEntry | null {
+  const affordable = entries.filter((entry) => ctx.gold >= entry.def.price);
+  if (affordable.length === 0) return null;
+
+  return affordable
+    .map((entry) => ({ entry, score: scoreEnemyShopEntry(entry, ctx) }))
+    .sort((a, b) => b.score - a.score)[0].entry;
+}
+
+type StatPulseState = { key: number; variant: FrameStatPulseVariant };
+
 const T = {
   CLASH_LANE_GAP: 300,
   DEATHS_SHOW: 1200,
@@ -211,6 +316,7 @@ function usePersistent<T>(key: string, initial: T): [T, (v: T | ((p: T) => T)) =
 
 // ---------- MAIN APP ----------
 export default function App() {
+  const { t } = useTranslation();
   // === PERSISTENT: gold + personal deck ===
   const [gold, setGold] = usePersistent<number>("lc_gold", STARTING_GOLD);
   const [deckCards, setDeckCards] = usePersistent<Card[]>("lc_deck_v2", buildStarterDeck());
@@ -222,10 +328,10 @@ export default function App() {
   // === GAME STATE ===
   const [playerBoard, setPlayerBoard] = useState<(Unit | null)[]>([null, null, null]);
   const [enemyBoard, setEnemyBoard] = useState<(Unit | null)[]>([null, null, null]);
-  const [currentTurn, setCurrentTurn] = useState<Owner>("player");
+  const [, setCurrentTurn] = useState<Owner>("player");
   const [phase, setPhase] = useState<Phase>("playerTurn");
   const [combatStep, setCombatStep] = useState<CombatStep>("idle");
-  const [round, setRound] = useState(1);
+  const [, setRound] = useState(1);
 
   const [playerMana, setPlayerMana] = useState(1);
   const [playerMaxMana, setPlayerMaxMana] = useState(1);
@@ -260,9 +366,11 @@ export default function App() {
   const [displayPlayerNexus, setDisplayPlayerNexus] = useState(STARTING_NEXUS);
   const [displayEnemyNexus, setDisplayEnemyNexus] = useState(STARTING_NEXUS);
   const [displayGold, setDisplayGold] = useState(gold);
-  const [flashNexus, setFlashNexus] = useState<"player" | "enemy" | null>(null);
   const [flashGold, setFlashGold] = useState<number | null>(null);
-  const [flashMana, setFlashMana] = useState<"player" | "enemy" | null>(null);
+  const [playerNexusPulse, setPlayerNexusPulse] = useState<StatPulseState>({ key: 0, variant: "damage" });
+  const [enemyNexusPulse, setEnemyNexusPulse] = useState<StatPulseState>({ key: 0, variant: "damage" });
+  const [playerManaPulse, setPlayerManaPulse] = useState<StatPulseState>({ key: 0, variant: "spend" });
+  const [enemyManaPulse, setEnemyManaPulse] = useState<StatPulseState>({ key: 0, variant: "gain" });
   const [roundResult, setRoundResult] = useState<Owner | "tie" | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [newlyBoughtUid, setNewlyBoughtUid] = useState<string | null>(null);
@@ -282,6 +390,18 @@ export default function App() {
       [unitId]: { key: (prev[unitId]?.key ?? 0) + 1, amount },
     }));
   }, []);
+
+  const bumpNexusPulse = useCallback((side: "player" | "enemy", variant: "damage" | "heal") => {
+    const setter = side === "player" ? setPlayerNexusPulse : setEnemyNexusPulse;
+    setter((prev) => ({ key: prev.key + 1, variant }));
+  }, []);
+
+  const bumpManaPulse = useCallback((side: "player" | "enemy", variant: "spend" | "gain") => {
+    const setter = side === "player" ? setPlayerManaPulse : setEnemyManaPulse;
+    setter((prev) => ({ key: prev.key + 1, variant }));
+  }, []);
+
+  const { Tour, startTour } = useGameTour();
 
   const startUnitDeploy = useCallback((unitId: string) => {
     setDeployingUnitIds((prev) => new Set(prev).add(unitId));
@@ -443,7 +563,7 @@ export default function App() {
       const val = card.value ?? 0;
       const target = enemyBoard[lane];
       if (!target) {
-        showToast("No enemy unit in this lane to damage!");
+        showToast(t("game.toasts.noEnemyUnit"));
         return;
       }
       setEnemyBoard(b => {
@@ -456,7 +576,7 @@ export default function App() {
       const val = card.value ?? 0;
       const target = playerBoard[lane];
       if (!target || target.hp >= target.maxHp) {
-        showToast("No wounded friendly unit in this lane!");
+        showToast(t("game.toasts.noWoundedAlly"));
         return;
       }
       setPlayerBoard(b => {
@@ -466,27 +586,23 @@ export default function App() {
         return nb;
       });
     } else if (card.effect === "damage_nexus") {
-      // Void Bolt — auto-cast, directly damages enemy nexus
       const val = card.value ?? 0;
       setEnemyNexus(n => Math.max(0, n - val));
-      setFlashNexus("enemy");
-      setTimeout(() => setFlashNexus(null), 1200);
+      bumpNexusPulse("enemy", "damage");
     } else if (card.effect === "heal_nexus") {
-      // Life Surge — auto-cast, directly heals own nexus
-      // Guard: don't waste if nexus is at full
       if (playerNexus >= STARTING_NEXUS) {
-        showToast("Nexus already at full HP!");
+        showToast(t("game.toasts.nexusFull"));
         return;
       }
       const val = card.value ?? 0;
       setPlayerNexus(n => Math.min(STARTING_NEXUS, n + val));
-      setFlashNexus("player");
-      setTimeout(() => setFlashNexus(null), 1200);
+      bumpNexusPulse("player", "heal");
     }
 
     if (!success) return;
 
     setPlayerMana(m => m - card.cost);
+    bumpManaPulse("player", "spend");
     // Permanently remove the card from the deck
     setDeckCards(d => d.filter(c => c.uid !== card.uid));
     setSelectedCardUid(null);
@@ -533,8 +649,8 @@ export default function App() {
 
   // ========== SHOP: BUY CARD ==========
   function buyFromShop(entry: ShopEntry, sourceEl: HTMLButtonElement) {
-    if (gold < entry.def.price) { showToast(`Need ${entry.def.price}💰`); return; }
-    if (deckCards.length >= MAX_DECK) { showToast(`Deck full! (${MAX_DECK})`); return; }
+    if (gold < entry.def.price) { showToast(t("game.toasts.needGold", { price: entry.def.price })); return; }
+    if (deckCards.length >= MAX_DECK) { showToast(t("game.toasts.deckFull", { max: MAX_DECK })); return; }
 
     const sourceRect = sourceEl.getBoundingClientRect();
     const cardArtSrc = getCardImageSrc(entry.def.id);
@@ -553,7 +669,7 @@ export default function App() {
   const [refreshes, setRefreshes] = useState(3);
   async function refreshShop() {
     if (shopRefreshingRef.current) return;
-    if (refreshes <= 0) { showToast("No refreshes left"); return; }
+    if (refreshes <= 0) { showToast(t("game.toasts.noRefreshes")); return; }
     shopRefreshingRef.current = true;
     setRefreshes(r => r - 1);
     try {
@@ -609,44 +725,60 @@ export default function App() {
     let pNexus = playerNexus;
     let eDeck = [...enemyDeck];
     let eGold = enemyGold;
+    const startPlayerNexus = pNexus;
+    const startEnemyNexus = enemyNexus;
+    const startEnemyMana = enemyMana;
     const consumed: string[] = [];
     const enemyPlacements: { lane: number; unitId: string }[] = [];
-    let pendingEnemyPurchase: { rect: DOMRect; art: string; uid: string } | null = null;
-    let boughtThisTurnUid: string | null = null;
+    const pendingEnemyPurchases: { rect: DOMRect; art: string; uid: string }[] = [];
+    const boughtThisTurnUids = new Set<string>();
 
     // --- ENEMY SHOPPING LOGIC ---
-    // Enemy shops if deck is low (<= 2 cards) or if they have no units and plenty of gold
-    const enemyUnitsInHand = eDeck.filter(c => c.type === "unit").length;
-    if (eDeck.length <= 2 || (enemyUnitsInHand === 0 && eGold >= 4)) {
-      // Look at current shop entries (Main Deck)
-      const affordable = shopEntriesRef.current.filter(
-        (entry): entry is ShopEntry => entry !== null && eGold >= entry.def.price
-      );
-      if (affordable.length > 0) {
-        // Prefer units if they have none, otherwise pick highest price (best card)
-        let picked = affordable[0];
-        const units = affordable.filter(e => e.def.type === "unit");
-        if (enemyUnitsInHand === 0 && units.length > 0) {
-          picked = units.sort((a, b) => b.def.price - a.def.price)[0];
-        } else {
-          picked = affordable.sort((a, b) => b.def.price - a.def.price)[0];
-        }
+    const shopCtx: EnemyShopContext = {
+      deckSize: eDeck.length,
+      unitsInHand: eDeck.filter((c) => c.type === "unit").length,
+      gold: eGold,
+      enemyNexus,
+      playerNexus: pNexus,
+      enemyBoardUnits: countBoardUnits(board),
+      playerBoardUnits: countBoardUnits(pBoard),
+      enemyMana: mana,
+    };
+
+    if (shouldEnemyShop(shopCtx)) {
+      const buyLimit = maxEnemyShopBuys(shopCtx);
+
+      for (let buyIndex = 0; buyIndex < buyLimit; buyIndex++) {
+        if (eDeck.length >= MAX_DECK) break;
+
+        shopCtx.deckSize = eDeck.length;
+        shopCtx.unitsInHand = eDeck.filter((c) => c.type === "unit").length;
+        shopCtx.gold = eGold;
+
+        const available = shopEntriesRef.current.filter(
+          (entry): entry is ShopEntry => entry !== null
+        );
+        const picked = pickEnemyShopEntry(available, shopCtx);
+        if (!picked) break;
 
         eGold -= picked.def.price;
         const newCard = makeCard(picked.def);
         eDeck.push(newCard);
-        boughtThisTurnUid = newCard.uid;
+        boughtThisTurnUids.add(newCard.uid);
 
         const shopBtn = document.querySelector<HTMLElement>(`[data-shop-entry="${picked.uid}"]`);
         if (shopBtn) {
-          pendingEnemyPurchase = {
+          pendingEnemyPurchases.push({
             rect: shopBtn.getBoundingClientRect(),
             art: "/images/mystery_card.png",
             uid: newCard.uid,
-          };
+          });
         }
 
-        applyShopPurchase(picked.uid, true);
+        applyShopPurchase(
+          picked.uid,
+          shopCtx.unitsInHand === 0 && picked.def.type !== "unit"
+        );
       }
     }
 
@@ -670,7 +802,7 @@ export default function App() {
     for (const card of sortedHand) {
       if (card.cost > mana) continue;
       if (consumed.includes(card.uid)) continue;
-      if (boughtThisTurnUid && card.uid === boughtThisTurnUid) continue;
+      if (boughtThisTurnUids.has(card.uid)) continue;
 
       if (card.type === "unit") {
         const empty = LANES.filter(l => board[l] === null);
@@ -700,7 +832,7 @@ export default function App() {
         pNexus = localPlayerNexus;
         mana -= card.cost;
         consumed.push(card.uid);
-        showToast(`👹 Enemy cast Void Bolt → -${val} to your Nexus!`);
+        showToast(t("game.toasts.enemyVoidBolt", { val }));
       } else if (card.effect === "heal_nexus") {
         // ♥ Life Surge — only cast if nexus is actually damaged
         if (localEnemyNexus >= STARTING_NEXUS) continue;
@@ -708,7 +840,7 @@ export default function App() {
         localEnemyNexus = Math.min(STARTING_NEXUS, localEnemyNexus + val);
         mana -= card.cost;
         consumed.push(card.uid);
-        showToast(`👹 Enemy cast Life Surge → +${val} to their Nexus`);
+        showToast(t("game.toasts.enemyLifeSurge", { val }));
       } else if (card.effect === "damage") {
         const val = card.value ?? 0;
         let best = -1, bestA = -1;
@@ -748,14 +880,24 @@ export default function App() {
     setEnemyGold(eGold);
     setEnemyDeck(eDeck.filter(c => !consumed.includes(c.uid)));
 
-    if (pendingEnemyPurchase) {
-      const { rect, art, uid } = pendingEnemyPurchase;
-      setEnemyNewlyBoughtUid(uid);
-      setTimeout(() => setEnemyNewlyBoughtUid(null), 1800);
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          void playShopPurchaseVfx(rect, art, "enemy");
-        });
+    if (localPlayerNexus < startPlayerNexus) bumpNexusPulse("player", "damage");
+    if (localEnemyNexus > startEnemyNexus) bumpNexusPulse("enemy", "heal");
+    if (localEnemyNexus < startEnemyNexus) bumpNexusPulse("enemy", "damage");
+    if (mana < startEnemyMana) bumpManaPulse("enemy", "spend");
+
+    if (pendingEnemyPurchases.length > 0) {
+      const lastPurchase = pendingEnemyPurchases[pendingEnemyPurchases.length - 1];
+      setEnemyNewlyBoughtUid(lastPurchase.uid);
+      setTimeout(() => setEnemyNewlyBoughtUid(null), 1800 + pendingEnemyPurchases.length * 350);
+
+      pendingEnemyPurchases.forEach((purchase, index) => {
+        setTimeout(() => {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              void playShopPurchaseVfx(purchase.rect, purchase.art, "enemy");
+            });
+          });
+        }, index * 350);
       });
     }
 
@@ -908,23 +1050,26 @@ export default function App() {
 
   useEffect(() => {
     if (combatStep !== "nexus" || !combatData) return;
-    setFlashNexus("player");
+
     const i1 = setInterval(() => {
       setDisplayPlayerNexus(prev => {
         const tgt = playerNexus;
         if (prev === tgt) { clearInterval(i1); return prev; }
         const s = Math.max(1, Math.ceil(Math.abs(tgt - prev) / 4));
-        return prev > tgt ? Math.max(tgt, prev - s) : Math.min(tgt, prev + s);
+        const next = prev > tgt ? Math.max(tgt, prev - s) : Math.min(tgt, prev + s);
+        if (next < prev) queueMicrotask(() => bumpNexusPulse("player", "damage"));
+        return next;
       });
     }, 80);
-    setTimeout(() => { clearInterval(i1); setDisplayPlayerNexus(playerNexus); setFlashNexus("enemy"); }, 800);
 
     const i2 = setInterval(() => {
       setDisplayEnemyNexus(prev => {
         const tgt = enemyNexus;
         if (prev === tgt) { clearInterval(i2); return prev; }
         const s = Math.max(1, Math.ceil(Math.abs(tgt - prev) / 4));
-        return prev > tgt ? Math.max(tgt, prev - s) : Math.min(tgt, prev + s);
+        const next = prev > tgt ? Math.max(tgt, prev - s) : Math.min(tgt, prev + s);
+        if (next < prev) queueMicrotask(() => bumpNexusPulse("enemy", "damage"));
+        return next;
       });
     }, 80);
 
@@ -932,12 +1077,10 @@ export default function App() {
       clearInterval(i1); clearInterval(i2);
       setDisplayPlayerNexus(playerNexus);
       setDisplayEnemyNexus(enemyNexus);
-      setFlashNexus(null);
 
       const { totalPlayerDamage: tP, totalEnemyDamage: tE } = combatData;
       const rw: Owner | "tie" = tP > tE ? "player" : tE > tP ? "enemy" : "tie";
       
-      // Everyone earns gold
       const pRoundGold = rw === "player" ? GOLD.WIN_ROUND : rw === "tie" ? GOLD.TIE_ROUND : GOLD.LOSE_ROUND;
       const pEarned = pRoundGold + GOLD.INCOME_PER_ROUND;
       const newPGold = gold + pEarned;
@@ -949,12 +1092,12 @@ export default function App() {
       const eEarned = eRoundGold + GOLD.INCOME_PER_ROUND;
       setEnemyGold(prev => prev + eEarned);
 
-      // Both sides get the same mana progression — +1 max mana each round
       const nextMax = Math.min(MAX_MANA, playerMaxMana + 1);
       setPlayerMaxMana(nextMax); setPlayerMana(nextMax);
       setEnemyMaxMana(nextMax); setEnemyMana(nextMax);
+      bumpManaPulse("player", "gain");
+      setTimeout(() => bumpManaPulse("enemy", "gain"), 450);
 
-      setFlashMana("player"); setTimeout(() => setFlashMana("enemy"), 600); setTimeout(() => setFlashMana(null), 1200);
       setRoundResult(rw);
       setCombatStep("rewards");
     }, T.NEXUS_SHOW);
@@ -971,7 +1114,7 @@ export default function App() {
       if (enemyNexus <= 0) setGold(g => g + GOLD.WIN_MATCH);
       return;
     }
-    const t = setTimeout(() => {
+    const rewardsTimer = setTimeout(() => {
       // New round: cards DON'T return (they were consumed when played)
       const nPM = Math.min(MAX_MANA, playerMaxMana + 1);
       setPlayerMaxMana(nPM); setPlayerMana(nPM);
@@ -981,7 +1124,7 @@ export default function App() {
       setGold(currentGold => {
         const emptyDeck = deckCards.length === 0;
         if (emptyDeck && currentGold === 0) {
-          showToast(`☀️ Rescue! +${GOLD.FREE_RESCUE}💰 — buy a unit to stay in the fight!`);
+          showToast(t("game.toasts.rescue", { gold: GOLD.FREE_RESCUE }));
           return currentGold + GOLD.FREE_RESCUE;
         }
         return currentGold;
@@ -998,12 +1141,12 @@ export default function App() {
       setUnitDamageBursts({});
       setBusy(false);
     }, T.REWARDS_SHOW);
-    return () => clearTimeout(t);
+    return () => clearTimeout(rewardsTimer);
     // eslint-disable-next-line
   }, [combatStep]);
 
   function resetProgress(silent = false) {
-    if (!silent && !confirm("Reset everything? Gold, deck, and match progress will restart from zero.")) return;
+    if (!silent && !confirm(t("game.confirmReset"))) return;
 
     if (toastTimer.current) {
       clearTimeout(toastTimer.current);
@@ -1018,9 +1161,11 @@ export default function App() {
     setBusy(false);
     setSelectedCardUid(null);
     setMovingUnitId(null);
-    setFlashNexus(null);
     setFlashGold(null);
-    setFlashMana(null);
+    setPlayerNexusPulse({ key: 0, variant: "damage" });
+    setEnemyNexusPulse({ key: 0, variant: "damage" });
+    setPlayerManaPulse({ key: 0, variant: "spend" });
+    setEnemyManaPulse({ key: 0, variant: "gain" });
     setToast(null);
     setNewlyBoughtUid(null);
     setEnemyNewlyBoughtUid(null);
@@ -1044,18 +1189,16 @@ export default function App() {
         backgroundAttachment: "fixed",
       }}
     >
+      <LanguageSync />
       <div
         className="game-columns grid h-full w-full min-h-0 overflow-visible"
         style={{ gridTemplateColumns: "var(--sidebar-w) 1fr var(--shop-w)" }}
       >
         <GameSidebar
-          round={round}
-          mainDeckRemaining={mainDeck.length + countShopCards(shopEntries)}
           maxDeck={MAX_DECK}
           goldWin={GOLD.WIN_ROUND + GOLD.INCOME_PER_ROUND}
           goldTie={GOLD.TIE_ROUND + GOLD.INCOME_PER_ROUND}
           goldLose={GOLD.LOSE_ROUND + GOLD.INCOME_PER_ROUND}
-          freeRescue={GOLD.FREE_RESCUE}
         />
 
         {/* Center column — enemy top, lanes middle, hand deck bottom */}
@@ -1071,17 +1214,18 @@ export default function App() {
               displayEnemyNexus={displayEnemyNexus}
               nexusMax={STARTING_NEXUS}
               enemyDeckCount={enemyDeck.length}
-              flashMana={flashMana === "enemy"}
-              flashNexus={flashNexus === "enemy"}
-              activeTurn={currentTurn === "enemy"}
+              manaPulseKey={enemyManaPulse.key}
+              manaPulseVariant={enemyManaPulse.variant}
+              nexusPulseKey={enemyNexusPulse.key}
+              nexusPulseVariant={enemyNexusPulse.variant}
               deckCardUids={enemyDeck.map((c) => c.uid)}
               newlyBoughtUid={enemyNewlyBoughtUid}
             />
           </div>
 
-          <div className="flex min-h-0 w-full flex-1 items-center justify-center">
+          <div className="flex min-h-0 w-full flex-1 items-center justify-center overflow-visible">
             <div
-              className="relative grid min-h-0 shrink-0 grid-cols-3 gap-[0.3%]"
+              className="relative grid min-h-0 shrink-0 grid-cols-3 gap-[0.3%] overflow-visible"
               style={{ width: "var(--arena-w)", height: "var(--lanes-h)" }}
             >
               {LANES.map((lane) => {
@@ -1107,6 +1251,7 @@ export default function App() {
                 return (
                   <AbsoluteFrameAnchor
                     key={lane}
+                    {...(lane === 1 ? { "data-tour": "lanes" } : {})}
                     className={cn(
                       "h-full min-h-0 transition-all duration-500",
                       (validTarget || isMoveTarget) && "lane-frame-target cursor-pointer"
@@ -1127,7 +1272,7 @@ export default function App() {
                       <div
                         data-lane-slot="enemy"
                         data-lane-index={lane}
-                        className="@container flex min-h-0 flex-1 items-center justify-center"
+                        className="@container flex min-h-0 flex-1 items-center justify-center overflow-visible"
                       >
                         {e ? (
                           <UnitCard
@@ -1152,10 +1297,10 @@ export default function App() {
                             lane
                             label={
                               validTarget && selectedCard?.type === "spell"
-                                ? "Cast here"
+                                ? t("lanes.castHere")
                                 : isMoveTarget
-                                  ? "Move here"
-                                  : "—"
+                                  ? t("lanes.moveHere")
+                                  : t("common.dash")
                             }
                             active={Boolean(
                               (validTarget && selectedCard?.type === "spell") || isMoveTarget
@@ -1176,7 +1321,7 @@ export default function App() {
                       <div
                         data-lane-slot="player"
                         data-lane-index={lane}
-                        className="@container flex min-h-0 flex-1 items-center justify-center"
+                        className="@container flex min-h-0 flex-1 items-center justify-center overflow-visible"
                       >
                         {p ? (
                           <UnitCard
@@ -1207,10 +1352,10 @@ export default function App() {
                             lane
                             label={
                               validTarget && selectedCard?.type === "unit"
-                                ? "Deploy here"
+                                ? t("lanes.deployHere")
                                 : isMoveTarget
-                                  ? "Move here"
-                                  : "—"
+                                  ? t("lanes.moveHere")
+                                  : t("common.dash")
                             }
                             active={Boolean(
                               (validTarget && selectedCard?.type === "unit") || isMoveTarget
@@ -1233,18 +1378,20 @@ export default function App() {
                 playerMaxMana={playerMaxMana}
                 displayPlayerNexus={displayPlayerNexus}
                 nexusMax={STARTING_NEXUS}
-                flashMana={flashMana === "player"}
-                flashNexus={flashNexus === "player"}
+                manaPulseKey={playerManaPulse.key}
+                manaPulseVariant={playerManaPulse.variant}
+                nexusPulseKey={playerNexusPulse.key}
+                nexusPulseVariant={playerNexusPulse.variant}
                 deckCount={deckCards.length}
                 deckEmpty={deckCards.length === 0}
-                selectedCardName={selectedCard?.name ?? null}
+                selectedCardName={selectedCard ? t(`cards.${selectedCard.id}`) : null}
                 isMoving={movingUnitId !== null && !selectedCard}
                 strikeDisabled={phase !== "playerTurn" || busy || !!winner}
                 onStrike={endTurn}
               >
                 {deckCards.length === 0 && (
                   <div className="font-display flex w-full items-center justify-center px-2 py-1 text-center text-[9px] text-rose-200 drop-shadow-md">
-                    Deck empty! Buy from Main Deck →
+                    {t("hand.deckEmptyBanner")}
                   </div>
                 )}
                 {deckCards.map((c) => {
@@ -1282,8 +1429,8 @@ export default function App() {
           <GameControls
             displayGold={displayGold}
             flashGold={flashGold}
-            onNewMatch={initMatch}
             onReset={() => resetProgress()}
+            onStartTour={startTour}
           />
           <AbsoluteFrameAnchor className="main-deck-panel">
             <MainDeckShop
@@ -1306,27 +1453,28 @@ export default function App() {
             {toast}
           </div>
         )}
+        {Tour}
         {winner && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm">
             <div className="stone-panel w-[90%] max-w-sm p-6 text-center shadow-2xl">
               <div className="mb-2 text-5xl animate-bounce">{winner === "player" ? "🏆" : "💀"}</div>
               <h2 className="font-display mb-1 text-2xl font-bold">
-                {winner === "player" ? "Victory!" : "Defeat"}
+                {winner === "player" ? t("game.victoryTitle") : t("game.defeatTitle")}
               </h2>
               <p className="mb-2 text-sm text-slate-300">
                 {winner === "player"
-                  ? `The enemy nexus has fallen. +${GOLD.WIN_MATCH}💰`
-                  : "Your nexus was shattered."}
+                  ? t("game.victoryBody", { gold: GOLD.WIN_MATCH })
+                  : t("game.defeatBody")}
               </p>
               <p className="mb-4 animate-pulse text-xs text-amber-400/80">
-                Auto-resetting and starting new match...
+                {t("game.autoReset")}
               </p>
               <button
                 type="button"
                 onClick={() => resetProgress(true)}
                 className="stone-btn w-full py-2.5 text-xs text-amber-100"
               >
-                Reset &amp; Play Now
+                {t("game.resetPlayNow")}
               </button>
             </div>
           </div>

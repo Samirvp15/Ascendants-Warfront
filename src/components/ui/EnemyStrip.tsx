@@ -1,7 +1,8 @@
 import { cn } from "../../utils/cn";
 import { AbsoluteFrame } from "../layout/AbsoluteFrame";
-import { FrameStatDisplay } from "./FrameStatDisplay";
+import { FrameStatDisplay, type FrameStatPulseVariant } from "./FrameStatDisplay";
 import { MysteryDeckCard } from "./MysteryDeckCard";
+import { useTranslation } from "react-i18next";
 
 type EnemyStripProps = {
   enemyMana: number;
@@ -9,9 +10,10 @@ type EnemyStripProps = {
   displayEnemyNexus: number;
   nexusMax: number;
   enemyDeckCount: number;
-  flashMana: boolean;
-  flashNexus: boolean;
-  activeTurn: boolean;
+  manaPulseKey?: number;
+  manaPulseVariant?: FrameStatPulseVariant;
+  nexusPulseKey?: number;
+  nexusPulseVariant?: FrameStatPulseVariant;
   className?: string;
   embedded?: boolean;
   deckCardUids?: string[];
@@ -24,14 +26,17 @@ export function EnemyStrip({
   displayEnemyNexus,
   nexusMax,
   enemyDeckCount,
-  flashMana,
-  flashNexus,
-  activeTurn,
+  manaPulseKey = 0,
+  manaPulseVariant,
+  nexusPulseKey = 0,
+  nexusPulseVariant,
   className = "",
   embedded = false,
   deckCardUids = [],
   newlyBoughtUid = null,
 }: EnemyStripProps) {
+  const { t } = useTranslation();
+
   return (
     <AbsoluteFrame
       image="/images/enemy_strip.png"
@@ -40,7 +45,6 @@ export function EnemyStrip({
           ? "inset-0 h-full w-full"
           : "left-1/2 top-0 z-30 w-[var(--enemy-w)] -translate-x-1/2",
         "transition-all duration-700",
-        activeTurn && "ring-1 ring-rose-400/40",
         className
       )}
       contentClassName="enemy-strip-content"
@@ -58,7 +62,7 @@ export function EnemyStrip({
               />
             ))
           ) : (
-            <span className="enemy-deck-zone__empty font-display">—</span>
+            <span className="enemy-deck-zone__empty font-display">{t("common.dash")}</span>
           )}
         </div>
       </div>
@@ -68,7 +72,8 @@ export function EnemyStrip({
           kind="mana"
           value={enemyMana}
           max={enemyMaxMana}
-          flash={flashMana}
+          valuePulseKey={manaPulseKey}
+          pulseVariant={manaPulseVariant}
           layout="icon-badge"
           valueOnBadge
           iconOnLeft
@@ -78,7 +83,8 @@ export function EnemyStrip({
           kind="nexus"
           value={displayEnemyNexus}
           max={nexusMax}
-          flash={flashNexus}
+          valuePulseKey={nexusPulseKey}
+          pulseVariant={nexusPulseVariant}
           layout="icon-badge"
           valueOnBadge
           className="frame-stat--enemy-right"
